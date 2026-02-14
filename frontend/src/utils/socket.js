@@ -13,6 +13,7 @@ export const initSocket = (token) => {
     auth: {
       token: token
     },
+    transports: ['websocket', 'polling'],
     reconnection: true,
     reconnectionDelay: 1000,
     reconnectionDelayMax: 5000,
