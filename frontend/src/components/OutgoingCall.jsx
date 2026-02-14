@@ -13,20 +13,7 @@ const OutgoingCall = () => {
     const socket = getSocket();
 
     useEffect(() => {
-        // Play ringing tone (optional)
-        let audio;
-        if (isCalling) {
-            audio = new Audio('/ringtone.mp3');
-            audio.loop = true;
-            audio.play().catch(err => console.log('Audio play failed:', err));
-        }
-
-        return () => {
-            if (audio) {
-                audio.pause();
-                audio.currentTime = 0;
-            }
-        };
+        // Ringtone removed - audio file not available
     }, [isCalling]);
 
     const handleCancel = () => {

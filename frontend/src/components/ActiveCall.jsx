@@ -35,24 +35,36 @@ const ActiveCall = () => {
 
             return () => clearInterval(interval);
         }
-    }, [isInCall, updateCallDuration]);
+    }, [isInCall]); // Removed updateCallDuration from deps
 
     // Set local video stream
     useEffect(() => {
         if (localVideoRef.current && localStream) {
-            console.log('🎥 Setting local stream:', localStream.getTracks());
+            console.log('🎥 Setting local stream with tracks:', localStream.getTracks().map(t => `${t.kind}: ${t.enabled}`));
             localVideoRef.current.srcObject = localStream;
             localVideoRef.current.play().catch(err => console.error('Local video play error:', err));
         }
+        return () => {
+            // Cleanup on unmount
+            if (localVideoRef.current) {
+                localVideoRef.current.srcObject = null;
+            }
+        };
     }, [localStream]);
 
     // Set remote video stream
     useEffect(() => {
         if (remoteVideoRef.current && remoteStream) {
-            console.log('📺 Setting remote stream:', remoteStream.getTracks());
+            console.log('📺 Setting remote stream with tracks:', remoteStream.getTracks().map(t => `${t.kind}: ${t.enabled}`));
             remoteVideoRef.current.srcObject = remoteStream;
             remoteVideoRef.current.play().catch(err => console.error('Remote video play error:', err));
         }
+        return () => {
+            // Cleanup on unmount
+            if (remoteVideoRef.current) {
+                remoteVideoRef.current.srcObject = null;
+            }
+        };
     }, [remoteStream]);
 
     const handleEndCall = () => {
@@ -73,16 +85,6 @@ const ActiveCall = () => {
 
     const otherUser = receiver || caller;
 
-    // Debug logs
-    console.log('ActiveCall render:', { 
-        isInCall, 
-        callType, 
-        hasLocalStream: !!localStream, 
-        hasRemoteStream: !!remoteStream,
-        localTracks: localStream?.getTracks().map(t => t.kind),
-        remoteTracks: remoteStream?.getTracks().map(t => t.kind)
-    });
-
     return (
         <div className={`fixed inset-0 bg-dark-300 z-50 flex flex-col ${isFullscreen ? 'p-0' : 'p-4'}`}>
             {/* Remote Video/Avatar */}
@@ -93,6 +95,7 @@ const ActiveCall = () => {
                         autoPlay
                         playsInline
                         controls={false}
+                        onLoadedMetadata={() => console.log('📺 Remote video loaded')}
                         className="w-full h-full object-cover"
                     />
                 ) : (
@@ -116,6 +119,7 @@ const ActiveCall = () => {
                             playsInline
                             muted
                             controls={false}
+                            onLoadedMetadata={() => console.log('🎥 Local video loaded')}
                             className="w-full h-full object-cover transform scale-x-[-1]"
                         />
                         {isVideoOff && (
