@@ -37,16 +37,28 @@ const useCallStore = create((set, get) => ({
     },
 
     rejectCall: () => {
-        const { localStream, peerConnection } = get();
+        const { localStream, remoteStream, peerConnection } = get();
 
-        // Clean up streams
+        // Clean up local stream
         if (localStream) {
-            localStream.getTracks().forEach(track => track.stop());
+            localStream.getTracks().forEach(track => {
+                track.stop();
+                console.log('🛑 Stopped local track:', track.kind);
+            });
+        }
+
+        // Clean up remote stream
+        if (remoteStream) {
+            remoteStream.getTracks().forEach(track => {
+                track.stop();
+                console.log('🛑 Stopped remote track:', track.kind);
+            });
         }
 
         // Close peer connection
         if (peerConnection) {
             peerConnection.close();
+            console.log('🔌 Peer connection closed');
         }
 
         set({
@@ -54,6 +66,7 @@ const useCallStore = create((set, get) => ({
             isCalling: false,
             incomingCallData: null,
             localStream: null,
+            remoteStream: null,
             peerConnection: null,
             caller: null
         });
@@ -117,20 +130,24 @@ const useCallStore = create((set, get) => ({
     toggleMute: () => {
         const { localStream, isMuted } = get();
         if (localStream) {
+            const newMutedState = !isMuted;
             localStream.getAudioTracks().forEach(track => {
-                track.enabled = !isMuted; // Enable when unmuting, disable when muting
+                track.enabled = !newMutedState; // Disable track when muting, enable when unmuting
             });
-            set({ isMuted: !isMuted });
+            set({ isMuted: newMutedState });
+            console.log(`🎤 Audio ${newMutedState ? 'MUTED' : 'UNMUTED'}`);
         }
     },
 
     toggleVideo: () => {
         const { localStream, isVideoOff } = get();
         if (localStream) {
+            const newVideoOffState = !isVideoOff;
             localStream.getVideoTracks().forEach(track => {
-                track.enabled = !isVideoOff; // Enable when turning on, disable when turning off
+                track.enabled = !newVideoOffState; // Disable track when turning off, enable when turning on
             });
-            set({ isVideoOff: !isVideoOff });
+            set({ isVideoOff: newVideoOffState });
+            console.log(`📹 Video ${newVideoOffState ? 'OFF' : 'ON'}`);
         }
     },
 

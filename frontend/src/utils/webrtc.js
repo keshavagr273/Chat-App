@@ -16,15 +16,31 @@ export const getUserMedia = async (callType) => {
         }
 
         const constraints = {
-            audio: true,
+            audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true
+            },
             video: callType === 'video' ? {
-                width: { ideal: 1280 },
-                height: { ideal: 720 }
+                width: { ideal: 1280, max: 1920 },
+                height: { ideal: 720, max: 1080 },
+                frameRate: { ideal: 30 }
             } : false
         };
 
+        console.log('🎬 Requesting media with constraints:', constraints);
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
-        console.log('✅ Media stream acquired:', stream.getTracks().map(t => t.kind));
+        
+        // Log detailed track info
+        stream.getTracks().forEach(track => {
+            console.log(`✅ Got ${track.kind} track:`, {
+                label: track.label,
+                enabled: track.enabled,
+                readyState: track.readyState,
+                muted: track.muted
+            });
+        });
+        
         return stream;
     } catch (error) {
         console.error('Error accessing media devices:', error);
@@ -103,9 +119,23 @@ export const handleIceCandidate = async (peerConnection, candidate) => {
 
 // Add local stream to peer connection
 export const addStreamToPeer = (peerConnection, stream) => {
-    stream.getTracks().forEach(track => {
-        peerConnection.addTrack(track, stream);
-    });
+    try {
+        if (!peerConnection || peerConnection.connectionState === 'closed') {
+            throw new Error('Peer connection is not available or already closed');
+        }
+        
+        console.log('➕ Adding tracks to peer connection:');
+        stream.getTracks().forEach(track => {
+            // Ensure track is enabled before adding
+            track.enabled = true;
+            console.log(`  - ${track.kind}: ${track.label}, enabled: ${track.enabled}, readyState: ${track.readyState}`);
+            peerConnection.addTrack(track, stream);
+        });
+        console.log('✅ All tracks added to peer connection');
+    } catch (error) {
+        console.error('❌ Error adding tracks to peer connection:', error);
+        throw error;
+    }
 };
 
 // Format call duration

@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useCallStore } from '../store/callStore';
 import { FiPhone, FiVideo } from 'react-icons/fi';
 import { getSocket } from '../utils/socket';
+import toast from 'react-hot-toast';
 
 const OutgoingCall = () => {
     const {
@@ -12,8 +13,21 @@ const OutgoingCall = () => {
     } = useCallStore();
     const socket = getSocket();
 
+    // Auto-cancel call after 60 seconds if not answered
     useEffect(() => {
-        // Ringtone removed - audio file not available
+        if (isCalling) {
+            console.log('⏱️ Starting 60-second call timeout');
+            const timeout = setTimeout(() => {
+                console.log('⏰ Call timeout - no answer after 60 seconds');
+                toast.error('No answer. Call ended.');
+                handleCancel();
+            }, 60000); // 60 seconds
+
+            return () => {
+                clearTimeout(timeout);
+                console.log('🧹 Call timeout cleared');
+            };
+        }
     }, [isCalling]);
 
     const handleCancel = () => {

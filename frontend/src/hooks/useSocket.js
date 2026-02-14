@@ -31,16 +31,6 @@ export const useSocket = () => {
     clearChatMessages
   } = useChatStore();
 
-  const {
-    setIncomingCall,
-    setLocalStream,
-    setRemoteStream,
-    setPeerConnection,
-    callConnected,
-    endCall,
-    peerConnection: pc
-  } = useCallStore();
-
   const { user } = useAuthStore();
 
   useEffect(() => {
@@ -135,28 +125,70 @@ export const useSocket = () => {
 
       // Just set incoming call state - don't get media yet
       // User needs to accept first to avoid camera/mic conflicts
+      const { setIncomingCall } = useCallStore.getState();
       setIncomingCall({ caller, callType, offer });
     });
 
     socket.on('call_accepted', async ({ answer }) => {
       try {
-        console.log('✅ Call accepted, received answer');
+        console.log('╔═══════════════════════════════════════════════════════════╗');
+        console.log('║           CALL ACCEPTED EVENT RECEIVED                    ║');
+        console.log('╚═══════════════════════════════════════════════════════════╝');
+        
+        // Get current state values - don't use closure values
+        const { peerConnection, callConnected, localStream, remoteStream } = useCallStore.getState();
+        
+        console.log('📊 Current call store state:');
+        console.log('  - peerConnection exists:', !!peerConnection);
+        console.log('  - answer received:', !!answer);
+        console.log('  - localStream exists:', !!localStream);
+        console.log('  - remoteStream exists:', !!remoteStream);
+        
+        if (localStream) {
+          console.log('  - localStream tracks:', localStream.getTracks().map(t => `${t.kind}: ${t.enabled}`));
+        }
 
-        if (pc && answer) {
-          await handleAnswer(pc, answer);
+        if (peerConnection && answer) {
+          console.log('🔄 Setting remote description with answer...');
+          console.log('Answer type:', answer.type);
+          await handleAnswer(peerConnection, answer);
+          console.log('✅✅✅ ANSWER HANDLED SUCCESSFULLY ✅✅✅');
+          
+          console.log('🔄 Calling callConnected() to transition to in-call state...');
           callConnected();
-          toast.success('Call connected!');
+          console.log('✅✅✅ STATE UPDATED - CALLER SHOULD NOW BE IN ACTIVECALL ✅✅✅');
+          
+          const newState = useCallStore.getState();
+          console.log('📊 Updated state:');
+          console.log('  - isInCall:', newState.isInCall);
+          console.log('  - isCalling:', newState.isCalling);
+          console.log('  - callType:', newState.callType);
+          
+          toast.success('Call connected!', { id: 'call-setup' });
+        } else {
+          console.error('❌❌❌ MISSING PEER CONNECTION OR ANSWER ❌❌❌');
+          console.error('Details:', { 
+            hasPC: !!peerConnection, 
+            hasAnswer: !!answer 
+          });
+          toast.error('Failed to establish call connection');
         }
       } catch (error) {
-        console.error('Error handling call acceptance:', error);
+        console.error('❌❌❌ ERROR HANDLING CALL ACCEPTANCE ❌❌❌');
+        console.error('Error:', error);
+        console.error('Error stack:', error.stack);
         toast.error('Failed to connect call');
+        const { endCall } = useCallStore.getState();
+        endCall();
       }
     });
 
     socket.on('ice_candidate', async ({ candidate }) => {
       try {
-        if (pc && candidate) {
-          await handleIceCandidate(pc, candidate);
+        const { peerConnection } = useCallStore.getState();
+        if (peerConnection && candidate) {
+          console.log('🧊 Adding ICE candidate');
+          await handleIceCandidate(peerConnection, candidate);
         }
       } catch (error) {
         console.error('Error handling ICE candidate:', error);
@@ -164,17 +196,22 @@ export const useSocket = () => {
     });
 
     socket.on('call_rejected', () => {
+      console.log('❌ Call was rejected');
       toast.error('Call was rejected');
+      const { endCall } = useCallStore.getState();
       endCall();
     });
 
     socket.on('call_ended', () => {
+      console.log('📵 Call ended by other user');
       toast('Call ended');
+      const { endCall } = useCallStore.getState();
       endCall();
     });
 
     socket.on('user_busy', () => {
       toast.error('User is busy on another call');
+      const { endCall } = useCallStore.getState();
       endCall();
     });
 
@@ -212,5 +249,5 @@ export const useSocket = () => {
       socket.off('user_busy');
       socket.off('error');
     };
-  }, [selectedChat, pc]);
+  }, [selectedChat]); // Removed pc from deps to avoid race conditions
 };
