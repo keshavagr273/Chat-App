@@ -134,16 +134,16 @@ export const useSocket = () => {
         console.log('╔═══════════════════════════════════════════════════════════╗');
         console.log('║           CALL ACCEPTED EVENT RECEIVED                    ║');
         console.log('╚═══════════════════════════════════════════════════════════╝');
-        
+
         // Get current state values - don't use closure values
         const { peerConnection, callConnected, localStream, remoteStream } = useCallStore.getState();
-        
+
         console.log('📊 Current call store state:');
         console.log('  - peerConnection exists:', !!peerConnection);
         console.log('  - answer received:', !!answer);
         console.log('  - localStream exists:', !!localStream);
         console.log('  - remoteStream exists:', !!remoteStream);
-        
+
         if (localStream) {
           console.log('  - localStream tracks:', localStream.getTracks().map(t => `${t.kind}: ${t.enabled}`));
         }
@@ -153,23 +153,23 @@ export const useSocket = () => {
           console.log('Answer type:', answer.type);
           await handleAnswer(peerConnection, answer);
           console.log('✅✅✅ ANSWER HANDLED SUCCESSFULLY ✅✅✅');
-          
+
           console.log('🔄 Calling callConnected() to transition to in-call state...');
           callConnected();
           console.log('✅✅✅ STATE UPDATED - CALLER SHOULD NOW BE IN ACTIVECALL ✅✅✅');
-          
+
           const newState = useCallStore.getState();
           console.log('📊 Updated state:');
           console.log('  - isInCall:', newState.isInCall);
           console.log('  - isCalling:', newState.isCalling);
           console.log('  - callType:', newState.callType);
-          
+
           toast.success('Call connected!', { id: 'call-setup' });
         } else {
           console.error('❌❌❌ MISSING PEER CONNECTION OR ANSWER ❌❌❌');
-          console.error('Details:', { 
-            hasPC: !!peerConnection, 
-            hasAnswer: !!answer 
+          console.error('Details:', {
+            hasPC: !!peerConnection,
+            hasAnswer: !!answer
           });
           toast.error('Failed to establish call connection');
         }

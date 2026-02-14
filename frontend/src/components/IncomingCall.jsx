@@ -40,7 +40,7 @@ const IncomingCall = () => {
 
             // Create peer connection
             const peerConnection = createPeerConnection();
-            
+
             // Set peer connection BEFORE setting up handlers
             setPeerConnection(peerConnection);
             console.log('✅ Peer connection created and stored in state');
@@ -55,41 +55,54 @@ const IncomingCall = () => {
                 }
             };
 
+            peerConnection.onconnectionstatechange = () => {
+                console.log('🔗 Connection state:', peerConnection.connectionState);
+                
+                if (peerConnection.connectionState === 'connected') {
+                    console.log('✅✅✅ PEER CONNECTION FULLY CONNECTED ✅✅✅');
+                    console.log('🎉 Media should now flow between peers!');
+                } else if (peerConnection.connectionState === 'connecting') {
+                    console.log('🔍 Connection establishing...');
+                } else if (peerConnection.connectionState === 'failed') {
+                    console.error('❌❌❌ PEER CONNECTION FAILED ❌❌❌');
+                } else if (peerConnection.connectionState === 'disconnected') {
+                    console.warn('⚠️ Peer connection disconnected');
+                }
+            };
+
             peerConnection.oniceconnectionstatechange = () => {
                 console.log('🧊 ICE connection state:', peerConnection.iceConnectionState);
                 console.log('📊 ICE gathering state:', peerConnection.iceGatheringState);
                 console.log('📊 Signaling state:', peerConnection.signalingState);
-                
-                if (peerConnection.iceConnectionState === 'failed') {
+
+                if (peerConnection.iceConnectionState === 'connected' || peerConnection.iceConnectionState === 'completed') {
+                    console.log('✅✅✅ ICE CONNECTION ESTABLISHED ✅✅✅');
+                    console.log('🎉 Peer-to-peer connection successful!');
+                } else if (peerConnection.iceConnectionState === 'checking') {
+                    console.log('🔍 ICE checking - looking for best connection path...');
+                } else if (peerConnection.iceConnectionState === 'failed') {
                     console.error('❌❌❌ ICE CONNECTION FAILED ❌❌❌');
-                    console.error('This usually means:');
-                    console.error('1. Firewall blocking WebRTC');
-                    console.error('2. NAT traversal issues (need TURN server)');
-                    console.error('3. Network connectivity problems');
-                    toast.error('Unable to establish connection. Please check your network.');
+                    console.error('Possible causes:');
+                    console.error('1. Both devices behind strict NAT/firewall');
+                    console.error('2. TURN server not reachable');
+                    console.error('3. Network blocking WebRTC traffic');
+                    console.error('4. Testing on same network/device (some routers block hairpinning)');
+                    toast.error('Unable to establish connection. Try from different networks.');
                     
                     // Try to restart ICE
                     console.log('♻️ Attempting ICE restart...');
                     peerConnection.restartIce();
                     
-                    // Don't end call immediately, give it a chance to recover
                     setTimeout(() => {
                         if (peerConnection.iceConnectionState === 'failed' || peerConnection.iceConnectionState === 'disconnected') {
                             console.error('❌ ICE restart failed, ending call');
                             const { endCall } = useCallStore.getState();
                             endCall();
                         }
-                    }, 5000); // Wait 5 seconds before ending
+                    }, 5000);
                 } else if (peerConnection.iceConnectionState === 'disconnected') {
                     console.warn('⚠️ ICE connection disconnected - attempting recovery');
                     toast.error('Connection lost, attempting to reconnect...');
-                } else if (peerConnection.iceConnectionState === 'connected' || peerConnection.iceConnectionState === 'completed') {
-                    console.log('✅✅✅ ICE CONNECTION ESTABLISHED ✅✅✅');
-                }
-            };
-
-            // Add local stream to peer connection
-            addStreamToPeer(peerConnection, stream);
 
             // Handle remote stream - THIS IS CRITICAL
             peerConnection.ontrack = (event) => {
@@ -101,7 +114,7 @@ const IncomingCall = () => {
                 console.log('📺 Track enabled:', event.track.enabled);
                 console.log('📺 Track muted:', event.track.muted);
                 console.log('📺 Track label:', event.track.label);
-                
+
                 if (event.streams && event.streams[0]) {
                     console.log('✅✅✅ RECEIVER RECEIVED REMOTE STREAM ✅✅✅');
                     console.log('Stream ID:', event.streams[0].id);

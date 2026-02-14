@@ -55,12 +55,12 @@ const ActiveCall = () => {
         if (localVideoRef.current && localStream && isInCall) {
             console.log('🎥 Setting local video stream');
             localVideoRef.current.srcObject = localStream;
-            
+
             localVideoRef.current.play()
                 .then(() => console.log('✅ Local video playing'))
                 .catch(err => console.error('❌ Local video play error:', err));
         }
-        
+
         return () => {
             if (localVideoRef.current) {
                 localVideoRef.current.srcObject = null;
@@ -74,7 +74,7 @@ const ActiveCall = () => {
         console.log('  - remoteVideoRef.current:', !!remoteVideoRef.current);
         console.log('  - remoteStream:', !!remoteStream);
         console.log('  - isInCall:', isInCall);
-        
+
         if (remoteVideoRef.current && remoteStream && isInCall) {
             console.log('📺📺📺 SETTING REMOTE VIDEO STREAM 📺📺📺');
             console.log('Remote stream details:');
@@ -86,12 +86,23 @@ const ActiveCall = () => {
                 readyState: t.readyState,
                 muted: t.muted
             })));
-            
-            // Unmute tracks if they're muted
+
+            // Monitor track unmute events
+            const unmuteHandlers = [];
             remoteStream.getTracks().forEach(track => {
                 if (track.muted) {
-                    console.warn('⚠️ Remote track is muted:', track.kind);
+                    console.warn(`⚠️⚠️ Remote ${track.kind} track is MUTED - waiting for data...`);
+                    
+                    const onUnmute = () => {
+                        console.log(`✅✅✅ Remote ${track.kind} track UNMUTED - data flowing!`);
+                    };
+                    
+                    track.addEventListener('unmute', onUnmute);
+                    unmuteHandlers.push({ track, handler: onUnmute });
+                } else {
+                    console.log(`✅ Remote ${track.kind} track already producing data`);
                 }
+                
                 console.log(`Track ${track.kind}:`, {
                     enabled: track.enabled,
                     muted: track.muted,
@@ -102,57 +113,31 @@ const ActiveCall = () => {
             remoteVideoRef.current.srcObject = remoteStream;
             console.log('✅ Remote stream assigned to video element');
             
-            // Add event listeners before playing
-            const handleCanPlay = () => {
-                console.log('✅ Remote video CAN PLAY - starting playback');
-            };
-            
-            const handleError = (e) => {
-                console.error('❌❌❌ REMOTE VIDEO ERROR ❌❌❌');
-                console.error('Error:', e);
-                console.error('Video element:', remoteVideoRef.current);
-                console.error('srcObject:', remoteVideoRef.current?.srcObject);
-            };
-            
-            remoteVideoRef.current.addEventListener('canplay', handleCanPlay);
-            remoteVideoRef.current.addEventListener('error', handleError);
-            
+            // Try to play immediately
             remoteVideoRef.current.play()
                 .then(() => {
-                    console.log('✅✅✅ REMOTE VIDEO PLAYING SUCCESSFULLY ✅✅✅');
+                    console.log('✅✅✅ REMOTE VIDEO PLAYING ✅✅✅');
+                    
+                    // Check if tracks are still muted after 2 seconds
+                    setTimeout(() => {
+                        const mutedTracks = remoteStream.getTracks().filter(t => t.muted);
+                        if (mutedTracks.length > 0) {
+                            console.error('❌❌❌ WARNING: Tracks still muted after 2 seconds!');
+                            console.error('Muted tracks:', mutedTracks.map(t => t.kind));
+                            console.error('This indicates ICE connection issues - check network/firewall');
+                        }
+                    }, 2000);
                 })
                 .catch(err => {
                     console.error('❌❌❌ REMOTE VIDEO PLAY ERROR ❌❌❌');
-                    console.error('Error name:', err.name);
-                    console.error('Error message:', err.message);
-                    console.error('Video element exists:', !!remoteVideoRef.current);
-                    console.error('Video element in DOM:', document.contains(remoteVideoRef.current));
+                    console.error('Error:', err.name, err.message);
                 });
             
             return () => {
-                if (remoteVideoRef.current) {
-                    remoteVideoRef.current.removeEventListener('canplay', handleCanPlay);
-                    remoteVideoRef.current.removeEventListener('error', handleError);
-                }
-            };
-        } else {
-            console.log('⚠️ Cannot set remote video:');
-            console.log('  - ref exists:', !!remoteVideoRef.current);
-            console.log('  - stream exists:', !!remoteStream);
-            console.log('  - in call:', isInCall);
-        }
-        
-        return () => {
-            if (remoteVideoRef.current) {
-                remoteVideoRef.current.srcObject = null;
-            }
-        };
-    }, [remoteStream, isInCall]);
-
-    const handleEndCall = () => {
-        if (socket) {
-            const otherUser = receiver || caller;
-            if (otherUser && otherUser._id) {
+                // Clean up unmute handlers
+                unmuteHandlers.forEach(({ track, handler }) => {
+                    track.removeEventListener('unmute', handler);
+                });
                 socket.emit('call_ended', {
                     to: otherUser._id
                 });
