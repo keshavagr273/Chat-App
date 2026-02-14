@@ -53,12 +53,23 @@ const IncomingCall = () => {
             const peerConnection = createPeerConnection();
             setPeerConnection(peerConnection);
 
+            // Add connection state handler
+            peerConnection.onconnectionstatechange = () => {
+                console.log('🔗 Connection state:', peerConnection.connectionState);
+            };
+
+            peerConnection.oniceconnectionstatechange = () => {
+                console.log('🧊 ICE connection state:', peerConnection.iceConnectionState);
+            };
+
             // Add local stream to peer connection
             addStreamToPeer(peerConnection, stream);
 
             // Handle remote stream
             peerConnection.ontrack = (event) => {
-                console.log('📺 Received remote stream');
+                console.log('📺 Received remote track:', event.track.kind);
+                console.log('📺 Remote stream:', event.streams[0]);
+                console.log('📺 Remote stream tracks:', event.streams[0].getTracks().map(t => t.kind));
                 setRemoteStream(event.streams[0]);
             };
 
