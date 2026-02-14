@@ -2,7 +2,8 @@ import { useEffect } from 'react';
 import { useCallStore } from '../store/callStore';
 import { FiPhone, FiPhoneOff, FiVideo } from 'react-icons/fi';
 import { getSocket } from '../utils/socket';
-import { handleOffer, createAnswer } from '../utils/webrtc';
+import { getUserMedia, createPeerConnection, addStreamToPeer, handleOffer, createAnswer } from '../utils/webrtc';
+import toast from 'react-hot-toast';
 
 const IncomingCall = () => {
     const {
@@ -10,7 +11,10 @@ const IncomingCall = () => {
         incomingCallData,
         acceptCall,
         rejectCall,
-        callType
+        callType,
+        setLocalStream,
+        setRemoteStream,
+        setPeerConnection
     } = useCallStore();
     const socket = getSocket();
 
@@ -31,9 +35,72 @@ const IncomingCall = () => {
         };
     }, [isIncomingCall]);
 
-    const handleAccept = () => {
+    const handleAccept = async () => {
         console.log('✅ Accepting call');
-        acceptCall();
+
+        if (!incomingCallData) return;
+
+        const { caller, offer, callType: incomingCallType } = incomingCallData;
+
+        try {
+            toast.loading('Setting up call...', { id: 'accept-call' });
+
+            // Get user media
+            const stream = await getUserMedia(incomingCallType);
+            setLocalStream(stream);
+
+            // Create peer connection
+            const peerConnection = createPeerConnection();
+            setPeerConnection(peerConnection);
+
+            // Add local stream to peer connection
+            addStreamToPeer(peerConnection, stream);
+
+            // Handle remote stream
+            peerConnection.ontrack = (event) => {
+                console.log('📺 Received remote stream');
+                setRemoteStream(event.streams[0]);
+            };
+
+            // Handle ICE candidates
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate && socket) {
+                    socket.emit('ice_candidate', {
+                        to: caller._id,
+                        candidate: event.candidate
+                    });
+                }
+            };
+
+            // Handle offer and create answer
+            if (offer) {
+                await handleOffer(peerConnection, offer);
+                const answer = await createAnswer(peerConnection);
+
+                if (socket) {
+                    socket.emit('call_accepted', {
+                        to: caller._id,
+                        answer
+                    });
+                }
+            }
+
+            // Update state to in-call
+            acceptCall();
+            toast.success('Call connected!', { id: 'accept-call' });
+
+        } catch (error) {
+            console.error('Error accepting call:', error);
+            toast.error(error.message || 'Failed to accept call', { id: 'accept-call' });
+
+            // Reject the call on error
+            if (socket) {
+                socket.emit('call_rejected', {
+                    to: caller._id
+                });
+            }
+            rejectCall();
+        }
     };
 
     const handleReject = () => {

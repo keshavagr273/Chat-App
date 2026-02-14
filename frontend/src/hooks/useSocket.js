@@ -131,53 +131,11 @@ export const useSocket = () => {
 
     // WebRTC Call Signaling
     socket.on('incoming_call', async ({ caller, callType, offer }) => {
-      try {
-        console.log('📞 Incoming call from:', caller.username);
+      console.log('📞 Incoming call from:', caller.username);
 
-        // Set incoming call state
-        setIncomingCall({ caller, callType, offer });
-
-        // Get user media
-        const stream = await getUserMedia(callType);
-        setLocalStream(stream);
-
-        // Create peer connection
-        const peerConnection = createPeerConnection();
-        setPeerConnection(peerConnection);
-
-        // Add local stream to peer connection
-        addStreamToPeer(peerConnection, stream);
-
-        // Handle remote stream
-        peerConnection.ontrack = (event) => {
-          console.log('📺 Received remote stream');
-          setRemoteStream(event.streams[0]);
-        };
-
-        // Handle ICE candidates
-        peerConnection.onicecandidate = (event) => {
-          if (event.candidate) {
-            socket.emit('ice_candidate', {
-              to: caller._id,
-              candidate: event.candidate
-            });
-          }
-        };
-
-        // Handle offer
-        if (offer) {
-          await handleOffer(peerConnection, offer);
-          const answer = await createAnswer(peerConnection);
-
-          socket.emit('call_accepted', {
-            to: caller._id,
-            answer
-          });
-        }
-      } catch (error) {
-        console.error('Error handling incoming call:', error);
-        toast.error('Failed to setup call. Please check camera/microphone permissions.');
-      }
+      // Just set incoming call state - don't get media yet
+      // User needs to accept first to avoid camera/mic conflicts
+      setIncomingCall({ caller, callType, offer });
     });
 
     socket.on('call_accepted', async ({ answer }) => {
@@ -223,6 +181,11 @@ export const useSocket = () => {
     // Error handling
     socket.on('error', (error) => {
       console.error('Socket error:', error);
+      if (error.type === 'chat_not_found') {
+        toast.error('This chat no longer exists');
+      } else if (error.message) {
+        toast.error(error.message);
+      }
     });
 
     // Cleanup

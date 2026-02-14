@@ -111,7 +111,7 @@ const ChatHeader = () => {
 
     } catch (error) {
       console.error('Error initiating call:', error);
-      toast.error('Failed to start call. Please check camera/microphone permissions.', { id: 'call-setup' });
+      toast.error(error.message || 'Failed to start call', { id: 'call-setup' });
 
       // Clean up on error
       setLocalStream(null);

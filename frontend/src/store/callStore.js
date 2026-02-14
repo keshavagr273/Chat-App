@@ -118,7 +118,7 @@ const useCallStore = create((set, get) => ({
         const { localStream, isMuted } = get();
         if (localStream) {
             localStream.getAudioTracks().forEach(track => {
-                track.enabled = isMuted;
+                track.enabled = !isMuted; // Enable when unmuting, disable when muting
             });
             set({ isMuted: !isMuted });
         }
@@ -128,7 +128,7 @@ const useCallStore = create((set, get) => ({
         const { localStream, isVideoOff } = get();
         if (localStream) {
             localStream.getVideoTracks().forEach(track => {
-                track.enabled = isVideoOff;
+                track.enabled = !isVideoOff; // Enable when turning on, disable when turning off
             });
             set({ isVideoOff: !isVideoOff });
         }

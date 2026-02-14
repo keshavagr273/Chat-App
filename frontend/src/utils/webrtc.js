@@ -10,6 +10,11 @@ const configuration = {
 // Get user media (camera/microphone)
 export const getUserMedia = async (callType) => {
     try {
+        // Check if getUserMedia is supported
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            throw new Error('Your browser does not support camera/microphone access');
+        }
+
         const constraints = {
             audio: true,
             video: callType === 'video' ? {
@@ -19,10 +24,21 @@ export const getUserMedia = async (callType) => {
         };
 
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        console.log('✅ Media stream acquired:', stream.getTracks().map(t => t.kind));
         return stream;
     } catch (error) {
         console.error('Error accessing media devices:', error);
-        throw error;
+
+        // Provide specific error messages
+        if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+            throw new Error('Camera/microphone permission denied. Please allow access in browser settings.');
+        } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+            throw new Error('No camera/microphone found. Please connect a device.');
+        } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+            throw new Error('Camera/microphone is already in use. If testing locally with two browsers, use different devices or try voice-only calls.');
+        } else {
+            throw new Error(error.message || 'Failed to access camera/microphone');
+        }
     }
 };
 
