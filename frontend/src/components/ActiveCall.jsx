@@ -28,40 +28,13 @@ const ActiveCall = () => {
     const [isFullscreen, setIsFullscreen] = useState(false);
     const socket = getSocket();
 
-    console.log('████████████████████████████████████████████████████████');
-    console.log('🎬 ACTIVECALL COMPONENT RENDER');
-    console.log('████████████████████████████████████████████████████████');
-    console.log('isInCall:', isInCall);
-    console.log('callType:', callType);
-    console.log('localStream exists:', !!localStream);
-    console.log('remoteStream exists:', !!remoteStream);
-    if (localStream) {
-        console.log('📹 LOCAL STREAM DETAILS:');
-        console.log('  - Stream ID:', localStream.id);
-        console.log('  - Active:', localStream.active);
-        console.log('  - Tracks:', localStream.getTracks().map(t => ({
-            kind: t.kind,
-            id: t.id,
-            label: t.label,
-            enabled: t.enabled,
-            readyState: t.readyState,
-            muted: t.muted
-        })));
-    }
-    if (remoteStream) {
-        console.log('📡 REMOTE STREAM DETAILS:');
-        console.log('  - Stream ID:', remoteStream.id);
-        console.log('  - Active:', remoteStream.active);
-        console.log('  - Tracks:', remoteStream.getTracks().map(t => ({
-            kind: t.kind,
-            id: t.id,
-            label: t.label,
-            enabled: t.enabled,
-            readyState: t.readyState,
-            muted: t.muted
-        })));
-    }
-    console.log('████████████████████████████████████████████████████████');
+    // Debug logging moved to useEffect to prevent excessive console spam
+    useEffect(() => {
+        if (isInCall) {
+            console.log('🎬 ActiveCall - In call with:', callType);
+            console.log('  Local stream:', !!localStream, 'Remote stream:', !!remoteStream);
+        }
+    }, [isInCall, callType, localStream, remoteStream]);
 
     // Update call duration every second
     useEffect(() => {
@@ -79,119 +52,39 @@ const ActiveCall = () => {
 
     // Set local video stream
     useEffect(() => {
-        console.log('╔════════════════════════════════════════════════════════╗');
-        console.log('║  LOCAL VIDEO STREAM EFFECT TRIGGERED                  ║');
-        console.log('╚════════════════════════════════════════════════════════╝');
-        console.log('localVideoRef.current exists:', !!localVideoRef.current);
-        console.log('localStream exists:', !!localStream);
-        
-        if (localVideoRef.current && localStream) {
-            console.log('🎥🎥🎥 SETTING LOCAL VIDEO STREAM 🎥🎥🎥');
-            console.log('Stream details:');
-            console.log('  - Stream ID:', localStream.id);
-            console.log('  - Stream active:', localStream.active);
-            console.log('  - Number of tracks:', localStream.getTracks().length);
-            localStream.getTracks().forEach((track, index) => {
-                console.log(`  - Track ${index + 1}:`, {
-                    kind: track.kind,
-                    enabled: track.enabled,
-                    readyState: track.readyState,
-                    muted: track.muted,
-                    label: track.label
-                });
-            });
-            
-            console.log('📺 Assigning stream to video element...');
+        if (localVideoRef.current && localStream && isInCall) {
+            console.log('🎥 Setting local video stream');
             localVideoRef.current.srcObject = localStream;
-            console.log('✅ Stream assigned to srcObject');
             
-            console.log('▶️ Calling play() on local video element...');
             localVideoRef.current.play()
-                .then(() => {
-                    console.log('✅✅✅ LOCAL VIDEO IS NOW PLAYING ✅✅✅');
-                    console.log('Video element state:');
-                    console.log('  - paused:', localVideoRef.current.paused);
-                    console.log('  - videoWidth:', localVideoRef.current.videoWidth);
-                    console.log('  - videoHeight:', localVideoRef.current.videoHeight);
-                    console.log('  - readyState:', localVideoRef.current.readyState);
-                })
-                .catch(err => {
-                    console.error('❌❌❌ LOCAL VIDEO PLAY ERROR ❌❌❌');
-                    console.error('Error details:', err);
-                    console.error('Error name:', err.name);
-                    console.error('Error message:', err.message);
-                });
-        } else {
-            console.log('⚠️ Cannot set local video - missing ref or stream');
-            console.log('  - localVideoRef.current:', !!localVideoRef.current);
-            console.log('  - localStream:', !!localStream);
+                .then(() => console.log('✅ Local video playing'))
+                .catch(err => console.error('❌ Local video play error:', err));
         }
         
         return () => {
-            console.log('🧹 Cleaning up local video stream');
             if (localVideoRef.current) {
                 localVideoRef.current.srcObject = null;
             }
         };
-    }, [localStream]);
+    }, [localStream, isInCall]);
 
     // Set remote video stream
     useEffect(() => {
-        console.log('╔════════════════════════════════════════════════════════╗');
-        console.log('║  REMOTE VIDEO STREAM EFFECT TRIGGERED                 ║');
-        console.log('╚════════════════════════════════════════════════════════╝');
-        console.log('remoteVideoRef.current exists:', !!remoteVideoRef.current);
-        console.log('remoteStream exists:', !!remoteStream);
-        
-        if (remoteVideoRef.current && remoteStream) {
-            console.log('📡📡📡 SETTING REMOTE VIDEO STREAM 📡📡📡');
-            console.log('Stream details:');
-            console.log('  - Stream ID:', remoteStream.id);
-            console.log('  - Stream active:', remoteStream.active);
-            console.log('  - Number of tracks:', remoteStream.getTracks().length);
-            remoteStream.getTracks().forEach((track, index) => {
-                console.log(`  - Track ${index + 1}:`, {
-                    kind: track.kind,
-                    enabled: track.enabled,
-                    readyState: track.readyState,
-                    muted: track.muted,
-                    label: track.label
-                });
-            });
-            
-            console.log('📺 Assigning stream to video element...');
+        if (remoteVideoRef.current && remoteStream && isInCall) {
+            console.log('📺 Setting remote video stream');
             remoteVideoRef.current.srcObject = remoteStream;
-            console.log('✅ Stream assigned to srcObject');
             
-            console.log('▶️ Calling play() on remote video element...');
             remoteVideoRef.current.play()
-                .then(() => {
-                    console.log('✅✅✅ REMOTE VIDEO IS NOW PLAYING ✅✅✅');
-                    console.log('Video element state:');
-                    console.log('  - paused:', remoteVideoRef.current.paused);
-                    console.log('  - videoWidth:', remoteVideoRef.current.videoWidth);
-                    console.log('  - videoHeight:', remoteVideoRef.current.videoHeight);
-                    console.log('  - readyState:', remoteVideoRef.current.readyState);
-                })
-                .catch(err => {
-                    console.error('❌❌❌ REMOTE VIDEO PLAY ERROR ❌❌❌');
-                    console.error('Error details:', err);
-                    console.error('Error name:', err.name);
-                    console.error('Error message:', err.message);
-                });
-        } else {
-            console.log('⚠️ Cannot set remote video - missing ref or stream');
-            console.log('  - remoteVideoRef.current:', !!remoteVideoRef.current);
-            console.log('  - remoteStream:', !!remoteStream);
+                .then(() => console.log('✅ Remote video playing'))
+                .catch(err => console.error('❌ Remote video play error:', err));
         }
         
         return () => {
-            console.log('🧹 Cleaning up remote video stream');
             if (remoteVideoRef.current) {
                 remoteVideoRef.current.srcObject = null;
             }
         };
-    }, [remoteStream]);
+    }, [remoteStream, isInCall]);
 
     const handleEndCall = () => {
         if (socket) {
@@ -243,12 +136,8 @@ const ActiveCall = () => {
                         playsInline
                         controls={false}
                         muted={false}
-                        onLoadedMetadata={(e) => {
-                            console.log('📺 Remote video metadata loaded');
-                            console.log('  Video dimensions:', e.target.videoWidth, 'x', e.target.videoHeight);
-                        }}
-                        onPlay={() => console.log('📺 Remote video started playing')}
-                        onStalled={() => console.warn('⚠️ Remote video stalled')}
+                        onPlay={() => console.log('▶️ Remote video playing')}
+                        onError={(e) => console.error('❌ Remote video error:', e.target.error)}
                         className="w-full h-full object-cover"
                     />
                 ) : (
