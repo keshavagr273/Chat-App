@@ -70,13 +70,76 @@ const ActiveCall = () => {
 
     // Set remote video stream
     useEffect(() => {
+        console.log('🔍 Remote video effect check:');
+        console.log('  - remoteVideoRef.current:', !!remoteVideoRef.current);
+        console.log('  - remoteStream:', !!remoteStream);
+        console.log('  - isInCall:', isInCall);
+        
         if (remoteVideoRef.current && remoteStream && isInCall) {
-            console.log('📺 Setting remote video stream');
+            console.log('📺📺📺 SETTING REMOTE VIDEO STREAM 📺📺📺');
+            console.log('Remote stream details:');
+            console.log('  - Stream ID:', remoteStream.id);
+            console.log('  - Active:', remoteStream.active);
+            console.log('  - Tracks:', remoteStream.getTracks().map(t => ({
+                kind: t.kind,
+                enabled: t.enabled,
+                readyState: t.readyState,
+                muted: t.muted
+            })));
+            
+            // Unmute tracks if they're muted
+            remoteStream.getTracks().forEach(track => {
+                if (track.muted) {
+                    console.warn('⚠️ Remote track is muted:', track.kind);
+                }
+                console.log(`Track ${track.kind}:`, {
+                    enabled: track.enabled,
+                    muted: track.muted,
+                    readyState: track.readyState
+                });
+            });
+            
             remoteVideoRef.current.srcObject = remoteStream;
+            console.log('✅ Remote stream assigned to video element');
+            
+            // Add event listeners before playing
+            const handleCanPlay = () => {
+                console.log('✅ Remote video CAN PLAY - starting playback');
+            };
+            
+            const handleError = (e) => {
+                console.error('❌❌❌ REMOTE VIDEO ERROR ❌❌❌');
+                console.error('Error:', e);
+                console.error('Video element:', remoteVideoRef.current);
+                console.error('srcObject:', remoteVideoRef.current?.srcObject);
+            };
+            
+            remoteVideoRef.current.addEventListener('canplay', handleCanPlay);
+            remoteVideoRef.current.addEventListener('error', handleError);
             
             remoteVideoRef.current.play()
-                .then(() => console.log('✅ Remote video playing'))
-                .catch(err => console.error('❌ Remote video play error:', err));
+                .then(() => {
+                    console.log('✅✅✅ REMOTE VIDEO PLAYING SUCCESSFULLY ✅✅✅');
+                })
+                .catch(err => {
+                    console.error('❌❌❌ REMOTE VIDEO PLAY ERROR ❌❌❌');
+                    console.error('Error name:', err.name);
+                    console.error('Error message:', err.message);
+                    console.error('Video element exists:', !!remoteVideoRef.current);
+                    console.error('Video element in DOM:', document.contains(remoteVideoRef.current));
+                });
+            
+            return () => {
+                if (remoteVideoRef.current) {
+                    remoteVideoRef.current.removeEventListener('canplay', handleCanPlay);
+                    remoteVideoRef.current.removeEventListener('error', handleError);
+                }
+            };
+        } else {
+            console.log('⚠️ Cannot set remote video:');
+            console.log('  - ref exists:', !!remoteVideoRef.current);
+            console.log('  - stream exists:', !!remoteStream);
+            console.log('  - in call:', isInCall);
         }
         
         return () => {

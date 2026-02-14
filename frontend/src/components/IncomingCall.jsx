@@ -57,14 +57,34 @@ const IncomingCall = () => {
 
             peerConnection.oniceconnectionstatechange = () => {
                 console.log('🧊 ICE connection state:', peerConnection.iceConnectionState);
+                console.log('📊 ICE gathering state:', peerConnection.iceGatheringState);
+                console.log('📊 Signaling state:', peerConnection.signalingState);
+                
                 if (peerConnection.iceConnectionState === 'failed') {
-                    console.error('❌ ICE connection failed');
+                    console.error('❌❌❌ ICE CONNECTION FAILED ❌❌❌');
+                    console.error('This usually means:');
+                    console.error('1. Firewall blocking WebRTC');
+                    console.error('2. NAT traversal issues (need TURN server)');
+                    console.error('3. Network connectivity problems');
                     toast.error('Unable to establish connection. Please check your network.');
-                    const { endCall } = useCallStore.getState();
-                    endCall();
+                    
+                    // Try to restart ICE
+                    console.log('♻️ Attempting ICE restart...');
+                    peerConnection.restartIce();
+                    
+                    // Don't end call immediately, give it a chance to recover
+                    setTimeout(() => {
+                        if (peerConnection.iceConnectionState === 'failed' || peerConnection.iceConnectionState === 'disconnected') {
+                            console.error('❌ ICE restart failed, ending call');
+                            const { endCall } = useCallStore.getState();
+                            endCall();
+                        }
+                    }, 5000); // Wait 5 seconds before ending
                 } else if (peerConnection.iceConnectionState === 'disconnected') {
-                    console.warn('⚠️ ICE connection disconnected');
-                    toast.error('Connection lost');
+                    console.warn('⚠️ ICE connection disconnected - attempting recovery');
+                    toast.error('Connection lost, attempting to reconnect...');
+                } else if (peerConnection.iceConnectionState === 'connected' || peerConnection.iceConnectionState === 'completed') {
+                    console.log('✅✅✅ ICE CONNECTION ESTABLISHED ✅✅✅');
                 }
             };
 
