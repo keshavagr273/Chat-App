@@ -43,7 +43,6 @@ const useCallStore = create((set, get) => ({
         if (localStream) {
             localStream.getTracks().forEach(track => {
                 track.stop();
-                console.log('🛑 Stopped local track:', track.kind);
             });
         }
 
@@ -51,14 +50,12 @@ const useCallStore = create((set, get) => ({
         if (remoteStream) {
             remoteStream.getTracks().forEach(track => {
                 track.stop();
-                console.log('🛑 Stopped remote track:', track.kind);
             });
         }
 
         // Close peer connection
         if (peerConnection) {
             peerConnection.close();
-            console.log('🔌 Peer connection closed');
         }
 
         set({
@@ -135,7 +132,6 @@ const useCallStore = create((set, get) => ({
                 track.enabled = !newMutedState; // Disable track when muting, enable when unmuting
             });
             set({ isMuted: newMutedState });
-            console.log(`🎤 Audio ${newMutedState ? 'MUTED' : 'UNMUTED'}`);
         }
     },
 
@@ -147,7 +143,6 @@ const useCallStore = create((set, get) => ({
                 track.enabled = !newVideoOffState; // Disable track when turning off, enable when turning on
             });
             set({ isVideoOff: newVideoOffState });
-            console.log(`📹 Video ${newVideoOffState ? 'OFF' : 'ON'}`);
         }
     },
 

@@ -41,19 +41,7 @@ export const getUserMedia = async (callType) => {
             } : false
         };
 
-        console.log('🎬 Requesting media with constraints:', constraints);
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
-
-        // Log detailed track info
-        stream.getTracks().forEach(track => {
-            console.log(`✅ Got ${track.kind} track:`, {
-                label: track.label,
-                enabled: track.enabled,
-                readyState: track.readyState,
-                muted: track.muted
-            });
-        });
-
         return stream;
     } catch (error) {
         console.error('Error accessing media devices:', error);
@@ -137,14 +125,11 @@ export const addStreamToPeer = (peerConnection, stream) => {
             throw new Error('Peer connection is not available or already closed');
         }
 
-        console.log('➕ Adding tracks to peer connection:');
         stream.getTracks().forEach(track => {
             // Ensure track is enabled before adding
             track.enabled = true;
-            console.log(`  - ${track.kind}: ${track.label}, enabled: ${track.enabled}, readyState: ${track.readyState}`);
             peerConnection.addTrack(track, stream);
         });
-        console.log('✅ All tracks added to peer connection');
     } catch (error) {
         console.error('❌ Error adding tracks to peer connection:', error);
         throw error;

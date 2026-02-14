@@ -16,16 +16,13 @@ const OutgoingCall = () => {
     // Auto-cancel call after 60 seconds if not answered
     useEffect(() => {
         if (isCalling) {
-            console.log('⏱️ Starting 60-second call timeout');
             const timeout = setTimeout(() => {
-                console.log('⏰ Call timeout - no answer after 60 seconds');
                 toast.error('No answer. Call ended.');
                 handleCancel();
             }, 60000); // 60 seconds
 
             return () => {
                 clearTimeout(timeout);
-                console.log('🧹 Call timeout cleared');
             };
         }
     }, [isCalling]);

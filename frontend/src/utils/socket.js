@@ -21,11 +21,11 @@ export const initSocket = (token) => {
   });
 
   socket.on('connect', () => {
-    console.log('✅ Socket connected');
+    // Connected
   });
 
   socket.on('disconnect', () => {
-    console.log('❌ Socket disconnected');
+    // Disconnected
   });
 
   socket.on('connect_error', (error) => {

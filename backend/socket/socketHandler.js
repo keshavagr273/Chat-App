@@ -42,8 +42,6 @@ const initializeSocket = (io) => {
   });
 
   io.on('connection', async (socket) => {
-    console.log(`✅ User connected: ${socket.user.username} (${socket.id})`);
-
     // Add user to online users map
     onlineUsers.set(socket.userId, socket.id);
 
@@ -339,12 +337,10 @@ const initializeSocket = (io) => {
 
     socket.on('join_chat', (chatId) => {
       socket.join(chatId);
-      console.log(`User ${socket.user.username} joined chat: ${chatId}`);
     });
 
     socket.on('leave_chat', (chatId) => {
       socket.leave(chatId);
-      console.log(`User ${socket.user.username} left chat: ${chatId}`);
     });
 
     // ==================== CALL SIGNALING ====================
@@ -371,8 +367,6 @@ const initializeSocket = (io) => {
           callType,
           offer
         });
-
-        console.log(`📞 ${socket.user.username} is calling ${to} (${callType})`);
       } catch (error) {
         console.error('Initiate call error:', error);
         socket.emit('error', { message: 'Failed to initiate call' });
@@ -393,7 +387,6 @@ const initializeSocket = (io) => {
               avatar: socket.user.avatar
             }
           });
-          console.log(`✅ Call accepted between ${to} and ${socket.userId}`);
         }
       } catch (error) {
         console.error('Accept call error:', error);
@@ -428,7 +421,6 @@ const initializeSocket = (io) => {
               username: socket.user.username
             }
           });
-          console.log(`❌ Call rejected by ${socket.user.username}`);
         }
       } catch (error) {
         console.error('Reject call error:', error);
@@ -447,7 +439,6 @@ const initializeSocket = (io) => {
               username: socket.user.username
             }
           });
-          console.log(`📵 Call ended between ${socket.userId} and ${to}`);
         }
       } catch (error) {
         console.error('End call error:', error);
@@ -473,8 +464,6 @@ const initializeSocket = (io) => {
     // ==================== DISCONNECT ====================
 
     socket.on('disconnect', async () => {
-      console.log(`❌ User disconnected: ${socket.user.username}`);
-
       // Remove from online users
       onlineUsers.delete(socket.userId);
 
@@ -493,8 +482,6 @@ const initializeSocket = (io) => {
       });
     });
   });
-
-  console.log('🔌 Socket.IO initialized');
 };
 
 module.exports = { initializeSocket };

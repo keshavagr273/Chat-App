@@ -62,13 +62,10 @@ const ChatHeader = () => {
     }
 
     try {
-      console.log(`🔄 Initiating ${callType} call to ${otherUser.username}`);
       toast.loading('Setting up call...', { id: 'call-setup' });
 
       // Get user media
-      console.log(`🎬 Requesting ${callType} media...`);
       const stream = await getUserMedia(callType);
-      console.log('🎞️ Got local stream with tracks:', stream.getTracks().map(t => `${t.kind}: enabled=${t.enabled}, readyState=${t.readyState}`));
       setLocalStream(stream);
 
       // Create peer connection
@@ -76,11 +73,9 @@ const ChatHeader = () => {
 
       // Set peer connection IMMEDIATELY - this is critical for call_accepted handler
       setPeerConnection(peerConnection);
-      console.log('✅ Peer connection created and stored in state');
 
       // Add connection state handlers
       peerConnection.onconnectionstatechange = () => {
-        console.log('🔗 Connection state:', peerConnection.connectionState);
         if (peerConnection.connectionState === 'failed') {
           toast.error('Connection failed. Please try again.');
           const { endCall } = useCallStore.getState();
@@ -88,106 +83,52 @@ const ChatHeader = () => {
         }
       };
 
-      peerConnection.onconnectionstatechange = () => {
-        console.log('🔗 Connection state:', peerConnection.connectionState);
-        
-        if (peerConnection.connectionState === 'connected') {
-          console.log('✅✅✅ PEER CONNECTION FULLY CONNECTED ✅✅✅');
-          console.log('🎉 Media should now flow between peers!');
-        } else if (peerConnection.connectionState === 'connecting') {
-          console.log('🔍 Connection establishing...');
-        } else if (peerConnection.connectionState === 'failed') {
-          console.error('❌❌❌ PEER CONNECTION FAILED ❌❌❌');
-        } else if (peerConnection.connectionState === 'disconnected') {
-          console.warn('⚠️ Peer connection disconnected');
-        }
-      };
-
       peerConnection.oniceconnectionstatechange = () => {
-        console.log('🧊 ICE connection state:', peerConnection.iceConnectionState);
-        console.log('📊 ICE gathering state:', peerConnection.iceGatheringState);
-        console.log('📊 Signaling state:', peerConnection.signalingState);
+        if (peerConnection.iceConnectionState === 'failed') {
+          toast.error('Unable to establish connection. Please check your network.');
 
-        if (peerConnection.iceConnectionState === 'connected' || peerConnection.iceConnectionState === 'completed') {
-          console.log('✅✅✅ ICE CONNECTION ESTABLISHED ✅✅✅');
-          console.log('🎉 Peer-to-peer connection successful!');
-        } else if (peerConnection.iceConnectionState === 'checking') {
-          console.log('🔍 ICE checking - looking for best connection path...');
-        } else if (peerConnection.iceConnectionState === 'failed') {
-          console.error('❌❌❌ ICE CONNECTION FAILED ❌❌❌');
-          console.error('Possible causes:');
-          console.error('1. Both devices behind strict NAT/firewall');
-          console.error('2. TURN server not reachable');
-          console.error('3. Network blocking WebRTC traffic');
-          console.error('4. Testing on same network/device (some routers block hairpinning)');
-          toast.error('Unable to establish connection. Try from different networks.');
-          
           // Try to restart ICE
-          console.log('♻️ Attempting ICE restart...');
           peerConnection.restartIce();
-          
+
+          // Don't end call immediately, give it a chance to recover
           setTimeout(() => {
             if (peerConnection.iceConnectionState === 'failed' || peerConnection.iceConnectionState === 'disconnected') {
-              console.error('❌ ICE restart failed, ending call');
               const { endCall } = useCallStore.getState();
               endCall();
             }
-          }, 5000);
+          }, 5000); // Wait 5 seconds before ending
         } else if (peerConnection.iceConnectionState === 'disconnected') {
-          console.warn('⚠️ ICE connection disconnected - attempting recovery');
           toast.error('Connection lost, attempting to reconnect...');
+        }
+      };
+
+      // Add local stream to peer connection
+      addStreamToPeer(peerConnection, stream);
 
       // Handle remote stream - THIS IS CRITICAL FOR CALLER TOO
       peerConnection.ontrack = (event) => {
-        console.log('╔═══════════════════════════════════════════════════════════╗');
-        console.log('║         CALLER: REMOTE TRACK RECEIVED                     ║');
-        console.log('╚═══════════════════════════════════════════════════════════╝');
-        console.log('📺 Track kind:', event.track.kind);
-        console.log('📺 Track readyState:', event.track.readyState);
-        console.log('📺 Track enabled:', event.track.enabled);
-        console.log('📺 Track muted:', event.track.muted);
-        console.log('📺 Track label:', event.track.label);
-
         if (event.streams && event.streams[0]) {
-          console.log('✅✅✅ CALLER RECEIVED REMOTE STREAM ✅✅✅');
-          console.log('Stream ID:', event.streams[0].id);
-          console.log('Stream active:', event.streams[0].active);
-          console.log('Stream tracks:', event.streams[0].getTracks().map(t => ({
-            kind: t.kind,
-            enabled: t.enabled,
-            readyState: t.readyState,
-            muted: t.muted
-          })));
           setRemoteStream(event.streams[0]);
-          console.log('✅ Remote stream set in call store');
-        } else {
-          console.warn('⚠️⚠️⚠️ RECEIVED TRACK WITHOUT STREAM');
         }
       };
 
       // Handle ICE candidates
       peerConnection.onicecandidate = (event) => {
         if (event.candidate) {
-          console.log('🧊 Caller sending ICE candidate');
           socket.emit('ice_candidate', {
             to: otherUser._id,
             candidate: event.candidate
           });
-        } else {
-          console.log('✅ ICE gathering complete for caller');
         }
       };
 
       // Create and send offer
-      console.log('📤 Creating offer...');
       const offer = await createOffer(peerConnection);
-      console.log('✅ Offer created:', offer.type);
 
       // Start call (sets isCalling to true but NOT isInCall yet)
       startCall(callType, otherUser);
 
       // Send call request to other user
-      console.log(`📡 Emitting initiate_call to ${otherUser._id}`);
       socket.emit('initiate_call', {
         to: otherUser._id,
         callType,
