@@ -29,9 +29,9 @@ const Chat = () => {
   }, [token]);
 
   return (
-    <div className="flex h-screen bg-dark-300">
+    <div className="flex h-screen bg-[#0b101a] overflow-hidden font-sans text-gray-200">
       <Sidebar />
-      <div className="flex-1">
+      <div className="flex-1 flex flex-col h-full bg-[#0b101a] relative z-0">
         {selectedChat ? <ChatBox /> : <Welcome />}
       </div>
 

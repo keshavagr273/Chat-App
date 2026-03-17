@@ -20,71 +20,76 @@ const Sidebar = () => {
   });
 
   return (
-    <div className="w-80 bg-dark-200 border-r border-gray-700 flex flex-col">
-      {/* Header */}
-      <div className="p-4 border-b border-gray-700">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <img
-              src={user?.avatar}
-              alt={user?.username}
-              className="w-10 h-10 rounded-full"
-            />
-            <div>
-              <h3 className="text-white font-semibold">{user?.username}</h3>
-              <p className="text-xs text-green-400">Online</p>
+    <div className="w-80 bg-[#161c2d] border-r border-[#1e2538] flex flex-col h-full shrink-0 shadow-lg relative z-10">
+      {/* Profile Header */}
+      <div className="p-5 flex items-center justify-between mt-1">
+        <div className="flex items-center gap-3">
+          {user?.avatar ? (
+            <img src={user.avatar} alt={user.username} className="w-10 h-10 rounded-full object-cover shadow-sm bg-gray-800" />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-yellow-400 text-[#161c2d] flex items-center justify-center font-bold text-sm shadow-sm ring-2 ring-[#161c2d]">
+              {user?.username?.substring(0, 2).toUpperCase() || 'JD'}
             </div>
+          )}
+          <div className="flex flex-col justify-center">
+            <h3 className="text-gray-100 font-semibold text-sm leading-tight tracking-wide">{user?.username}</h3>
+            <p className="text-[11px] text-emerald-500 font-medium mt-0.5">Online</p>
           </div>
-          <button
-            onClick={logout}
-            className="text-gray-400 hover:text-red-400 transition"
-            title="Logout"
-          >
-            <FiLogOut className="text-xl" />
-          </button>
         </div>
+        <button
+          onClick={logout}
+          className="text-gray-500 hover:text-gray-300 transition-colors p-2 rounded-full hover:bg-white/5"
+          title="Logout"
+        >
+          <FiLogOut className="text-[18px]" />
+        </button>
+      </div>
 
-        {/* Search */}
-        <div className="relative">
-          <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+      {/* Search Input */}
+      <div className="px-5 pb-4">
+        <div className="relative group">
+          <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm group-focus-within:text-secondary transition-colors" />
           <input
             type="text"
             placeholder="Search chats..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-dark-300 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full pl-9 pr-4 py-2 bg-[#0e1320] border border-[#273147] rounded-lg text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary/50 transition-all shadow-inner"
           />
         </div>
       </div>
 
       {/* New Chat Button */}
-      <div className="p-4">
+      <div className="px-5 pb-5 border-b border-[#222b40]">
         <button
           onClick={() => setShowNewChat(true)}
-          className="w-full bg-gradient-to-r from-primary to-secondary text-white font-semibold py-2 rounded-lg hover:opacity-90 transition flex items-center justify-center gap-2"
+          className="w-full bg-secondary hover:bg-[#7c3aed] text-white font-medium py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 text-sm shadow-md shadow-secondary/20 hover:shadow-secondary/40 active:scale-[0.98]"
         >
-          <FiMessageCircle />
+          <FiMessageCircle className="text-[18px]" />
           New Chat
         </button>
       </div>
 
       {/* Chat List */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto custom-scrollbar bg-[#161c2d]">
         {filteredChats.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-500">
-            <FiMessageCircle className="text-5xl mb-2" />
-            <p>No chats yet</p>
-            <p className="text-sm">Start a new conversation!</p>
+          <div className="flex flex-col items-center justify-center h-full text-gray-500 px-6 text-center mt-[-20%]">
+            <FiMessageCircle className="text-[40px] mb-3 opacity-40 stroke-[1.5]" />
+            <p className="text-[13px] font-medium text-gray-400">No chats yet</p>
+            <p className="text-[12px] opacity-70 mt-1 text-gray-500">Start a new conversation!</p>
           </div>
         ) : (
-          filteredChats.map(chat => (
-            <ChatItem
-              key={chat._id}
-              chat={chat}
-              isSelected={selectedChat?._id === chat._id}
-              onClick={() => setSelectedChat(chat)}
-            />
-          ))
+          <div className="py-2 space-y-0.5">
+            {filteredChats.map(chat => (
+              <div className="px-3" key={chat._id}>
+                <ChatItem
+                  chat={chat}
+                  isSelected={selectedChat?._id === chat._id}
+                  onClick={() => setSelectedChat(chat)}
+                />
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
