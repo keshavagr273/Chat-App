@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { FiMail, FiLock, FiUser, FiMessageCircle } from 'react-icons/fi';
+import toast from 'react-hot-toast';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -39,40 +40,44 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary to-secondary p-4">
-      <div className="max-w-md w-full bg-dark-200 rounded-2xl shadow-2xl p-8">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#0d0f14] relative overflow-hidden font-sans px-4">
+      {/* Background Soft Glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#663399]/20 rounded-full blur-[120px] pointer-events-none"></div>
+
+      {/* Main Card */}
+      <div className="w-full max-w-[420px] bg-[#1a1c22]/95 backdrop-blur-sm border border-[#272a34] rounded-[24px] shadow-2xl p-9 relative z-10">
         {/* Logo */}
-        <div className="flex justify-center mb-8">
-          <div className="bg-gradient-to-r from-primary to-secondary p-3 rounded-full">
-            <FiMessageCircle className="text-white text-4xl" />
+        <div className="flex justify-center mb-6">
+          <div className="w-[52px] h-[52px] bg-[#e5e7eb] rounded-full flex items-center justify-center shadow-lg">
+            <FiMessageCircle className="text-[#1a1c22] text-2xl stroke-[2] translate-y-[-1px] fill-[#1a1c22]" />
           </div>
         </div>
 
         {/* Title */}
-        <h2 className="text-3xl font-bold text-white text-center mb-2">
+        <h2 className="text-[36px] font-semibold text-gray-100 text-center mb-2 tracking-wide">
           Create Account
         </h2>
-        <p className="text-gray-400 text-center mb-8">
+        <p className="text-[#8e98a8] text-center mb-10 text-[18px]">
           Join us and start chatting
         </p>
 
         {/* Register Form */}
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* Username */}
           <div>
-            <label className="block text-gray-300 mb-2 text-sm font-medium">
+            <label className="block text-[#8e98a8] mb-1.5 text-[15px] font-medium ml-1">
               Username
             </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiUser className="text-gray-400" />
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                <FiUser className="text-[#596377] text-[22px] group-focus-within:text-gray-300 transition-colors" />
               </div>
               <input
                 type="text"
                 name="username"
                 value={formData.username}
                 onChange={handleChange}
-                className="w-full pl-10 pr-4 py-3 bg-dark-300 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full pl-12 pr-4 py-4 bg-[#12141a] border border-[#272a34] rounded-xl text-gray-200 placeholder-[#495466] focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary/50 transition-all text-[20px] placeholder:text-[20px] caret-white"
                 placeholder="johndoe"
                 required
                 minLength={3}
@@ -82,19 +87,19 @@ const Register = () => {
 
           {/* Email */}
           <div>
-            <label className="block text-gray-300 mb-2 text-sm font-medium">
+            <label className="block text-[#8e98a8] mb-1.5 text-[15px] font-medium ml-1">
               Email
             </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiMail className="text-gray-400" />
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                <FiMail className="text-[#596377] text-[22px] group-focus-within:text-gray-300 transition-colors" />
               </div>
               <input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full pl-10 pr-4 py-3 bg-dark-300 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full pl-12 pr-4 py-4 bg-[#12141a] border border-[#272a34] rounded-xl text-gray-200 placeholder-[#495466] focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary/50 transition-all text-[20px] placeholder:text-[20px] caret-white"
                 placeholder="you@example.com"
                 required
               />
@@ -103,19 +108,19 @@ const Register = () => {
 
           {/* Password */}
           <div>
-            <label className="block text-gray-300 mb-2 text-sm font-medium">
+            <label className="block text-[#8e98a8] mb-1.5 text-[15px] font-medium ml-1">
               Password
             </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiLock className="text-gray-400" />
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                <FiLock className="text-[#596377] text-[22px] group-focus-within:text-gray-300 transition-colors" />
               </div>
               <input
                 type="password"
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full pl-10 pr-4 py-3 bg-dark-300 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full pl-12 pr-4 py-4 bg-[#12141a] border border-[#272a34] rounded-xl text-gray-200 placeholder-[#495466] focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary/50 transition-all text-[20px] placeholder:text-[20px] caret-white tracking-[0.2em]"
                 placeholder="••••••••"
                 required
                 minLength={6}
@@ -125,19 +130,19 @@ const Register = () => {
 
           {/* Confirm Password */}
           <div>
-            <label className="block text-gray-300 mb-2 text-sm font-medium">
+            <label className="block text-[#8e98a8] mb-1.5 text-[15px] font-medium ml-1">
               Confirm Password
             </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiLock className="text-gray-400" />
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                <FiLock className="text-[#596377] text-[22px] group-focus-within:text-gray-300 transition-colors" />
               </div>
               <input
                 type="password"
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className="w-full pl-10 pr-4 py-3 bg-dark-300 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full pl-12 pr-4 py-4 bg-[#12141a] border border-[#272a34] rounded-xl text-gray-200 placeholder-[#495466] focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary/50 transition-all text-[20px] placeholder:text-[20px] caret-white tracking-[0.2em]"
                 placeholder="••••••••"
                 required
               />
@@ -148,16 +153,16 @@ const Register = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-primary to-secondary text-white font-semibold py-3 rounded-lg hover:opacity-90 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed mt-6"
+            className="w-full bg-[#4a148c] hover:bg-[#5a189a] text-gray-100 font-semibold py-4 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed mt-8 shadow-lg shadow-[#4a148c]/20 active:scale-[0.98] text-[19px]"
           >
             {loading ? 'Creating account...' : 'Sign Up'}
           </button>
         </form>
 
         {/* Login Link */}
-        <p className="mt-6 text-center text-gray-400">
+        <p className="mt-8 text-center text-[#8e98a8] text-[16px]">
           Already have an account?{' '}
-          <Link to="/login" className="text-primary hover:text-secondary font-semibold">
+          <Link to="/login" className="text-[#9d81d2] hover:text-[#c4b5fd] transition-colors">
             Sign in
           </Link>
         </p>

@@ -10,15 +10,15 @@ const Welcome = () => {
         <div className="w-[110px] h-[110px] bg-secondary rounded-full flex items-center justify-center mb-8 shadow-2xl shadow-secondary/20 border-4 border-[#1c2438]">
           <FiMessageCircle className="text-[55px] text-white stroke-[1.5]" />
         </div>
-        
+
         <h2 className="text-[32px] font-bold text-gray-100 mb-3 tracking-tight flex items-center gap-3">
           Welcome, {user?.username}! <span className="text-[28px] animate-wave origin-bottom-right">👋</span>
         </h2>
-        
+
         <p className="text-[#8e9bb0] mb-10 text-[15px] max-w-sm">
           Select a chat to start messaging
         </p>
-        
+
         <div className="bg-[#141b2d] rounded-xl p-7 w-full max-w-[320px] shadow-xl border border-[#212a40]">
           <h3 className="text-gray-200 font-semibold mb-5 text-[15px] flex items-center justify-center tracking-wide">
             Features:

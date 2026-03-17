@@ -27,40 +27,44 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary to-secondary p-4">
-      <div className="max-w-md w-full bg-dark-200 rounded-2xl shadow-2xl p-8">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#0d0f14] relative overflow-hidden font-sans px-4">
+      {/* Background Soft Glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#663399]/20 rounded-full blur-[120px] pointer-events-none"></div>
+
+      {/* Main Card */}
+      <div className="w-full max-w-[420px] bg-[#1a1c22]/95 backdrop-blur-sm border border-[#272a34] rounded-[24px] shadow-2xl p-9 relative z-10">
         {/* Logo */}
-        <div className="flex justify-center mb-8">
-          <div className="bg-gradient-to-r from-primary to-secondary p-3 rounded-full">
-            <FiMessageCircle className="text-white text-4xl" />
+        <div className="flex justify-center mb-6">
+          <div className="w-[52px] h-[52px] bg-secondary rounded-full flex items-center justify-center shadow-lg shadow-secondary/30">
+            <FiMessageCircle className="text-white text-2xl stroke-[2]" />
           </div>
         </div>
 
         {/* Title */}
-        <h2 className="text-3xl font-bold text-white text-center mb-2">
+        <h2 className="text-[32px] font-medium text-gray-100 text-center mb-1.5 tracking-wide">
           Welcome Back!
         </h2>
-        <p className="text-gray-400 text-center mb-8">
+        <p className="text-[#8e98a8] text-center mb-8 text-[16px]">
           Sign in to continue chatting
         </p>
 
         {/* Login Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* Email */}
           <div>
-            <label className="block text-gray-300 mb-2 text-sm font-medium">
+            <label className="block text-[#8e98a8] mb-1.5 text-[15px] font-medium ml-1">
               Email
             </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiMail className="text-gray-400" />
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                <FiMail className="text-[#596377] text-[22px] group-focus-within:text-gray-300 transition-colors" />
               </div>
               <input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full pl-10 pr-4 py-3 bg-dark-300 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full pl-12 pr-4 py-4 bg-[#12141a] border border-[#272a34] rounded-xl text-gray-200 placeholder-[#495466] focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary/50 transition-all text-[20px] placeholder:text-[20px] caret-white"
                 placeholder="you@example.com"
                 required
               />
@@ -69,19 +73,19 @@ const Login = () => {
 
           {/* Password */}
           <div>
-            <label className="block text-gray-300 mb-2 text-sm font-medium">
+            <label className="block text-[#8e98a8] mb-1.5 text-[15px] font-medium ml-1">
               Password
             </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiLock className="text-gray-400" />
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                <FiLock className="text-[#596377] text-[22px] group-focus-within:text-gray-300 transition-colors" />
               </div>
               <input
                 type="password"
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full pl-10 pr-4 py-3 bg-dark-300 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full pl-12 pr-4 py-4 bg-[#12141a] border border-[#272a34] rounded-xl text-gray-200 placeholder-[#495466] focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary/50 transition-all text-[20px] placeholder:text-[20px] caret-white tracking-[0.2em]"
                 placeholder="••••••••"
                 required
               />
@@ -92,16 +96,16 @@ const Login = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-primary to-secondary text-white font-semibold py-3 rounded-lg hover:opacity-90 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-[#4a148c] hover:bg-[#5a189a] text-gray-100 font-medium py-3.5 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed mt-4 text-[17px]"
           >
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
 
         {/* Register Link */}
-        <p className="mt-6 text-center text-gray-400">
+        <p className="mt-7 text-center text-[#8e98a8] text-[15px]">
           Don't have an account?{' '}
-          <Link to="/register" className="text-primary hover:text-secondary font-semibold">
+          <Link to="/register" className="text-[#9d81d2] hover:text-[#c4b5fd] transition-colors">
             Sign up
           </Link>
         </p>
