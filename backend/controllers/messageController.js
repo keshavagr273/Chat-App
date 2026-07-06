@@ -4,10 +4,9 @@ const User = require('../models/User');
 
 // @desc    Send message
 // @route   POST /api/messages
-// @access  Private
 const sendMessage = async (req, res) => {
   try {
-    const { content, chatId, messageType, fileUrl, fileName } = req.body;
+    const { content, chatId, messageType, fileUrl, fileName, replyTo } = req.body;
 
     if ((!content && !fileUrl) || !chatId) {
       return res.status(400).json({
@@ -22,13 +21,19 @@ const sendMessage = async (req, res) => {
       chat: chatId,
       messageType: messageType || 'text',
       fileUrl: fileUrl || '',
-      fileName: fileName || ''
+      fileName: fileName || '',
+      replyTo: replyTo || null
     };
 
     let message = await Message.create(newMessage);
 
     message = await message.populate('sender', 'username avatar');
     message = await message.populate('chat');
+    message = await message.populate({
+      path: 'replyTo',
+      select: 'content sender messageType fileUrl fileName isDeleted',
+      populate: { path: 'sender', select: 'username' }
+    });
     message = await User.populate(message, {
       path: 'chat.users',
       select: 'username avatar email'
@@ -59,12 +64,18 @@ const getMessages = async (req, res) => {
   try {
     const messages = await Message.find({
       chat: req.params.chatId,
-      isDeleted: false
+      isDeleted: false,
+      deletedFor: { $ne: req.user._id }
     })
       .populate('sender', 'username avatar email')
       .populate('chat')
       .populate('reactions.user', 'username avatar')
-      .populate('readBy.user', 'username avatar');
+      .populate('readBy.user', 'username avatar')
+      .populate({
+        path: 'replyTo',
+        select: 'content sender messageType fileUrl fileName isDeleted',
+        populate: { path: 'sender', select: 'username' }
+      });
 
     res.json({
       success: true,

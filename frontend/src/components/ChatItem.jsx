@@ -4,7 +4,7 @@ import { useChatStore } from '../store/chatStore';
 import { FiCheck, FiCheckCircle } from 'react-icons/fi';
 import Avatar from './Avatar';
 
-const ChatItem = ({ chat, isSelected, onClick }) => {
+const ChatItem = ({ chat, isSelected, onClick, unreadCount = 0 }) => {
   const { user } = useAuthStore();
   const { onlineUsers } = useChatStore();
 
@@ -51,32 +51,42 @@ const ChatItem = ({ chat, isSelected, onClick }) => {
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-1">
             <h4 className="text-white font-semibold truncate">{name}</h4>
-            {latestMessage && (
-              <span className="text-xs text-gray-400">
-                {format(new Date(latestMessage.createdAt), 'HH:mm')}
-              </span>
-            )}
-          </div>
-
-          {latestMessage && (
-            <div className="flex items-center gap-2">
-              {latestMessage.sender === user._id && (
-                <span className="text-gray-400">
-                  {latestMessage.readBy?.length > 0 ? (
-                    <FiCheckCircle className="text-primary" />
-                  ) : (
-                    <FiCheck />
-                  )}
+            <div className="flex flex-col items-end gap-1">
+              {latestMessage && (
+                <span className="text-xs text-gray-400 font-medium">
+                  {format(new Date(latestMessage.createdAt), 'HH:mm')}
                 </span>
               )}
-              <p className="text-sm text-gray-400 truncate">
-                {latestMessage.isDeleted
-                  ? <em>Message deleted</em>
-                  : latestMessage.content || latestMessage.messageType
-                }
-              </p>
             </div>
-          )}
+          </div>
+
+          <div className="flex items-center justify-between">
+            {latestMessage && (
+              <div className="flex items-center gap-2 flex-1 min-w-0 pr-2">
+                {latestMessage.sender === user._id && (
+                  <span className="text-gray-400 shrink-0">
+                    {latestMessage.readBy?.length > 0 ? (
+                      <FiCheckCircle className="text-primary" />
+                    ) : (
+                      <FiCheck />
+                    )}
+                  </span>
+                )}
+                <p className="text-sm text-gray-400 truncate">
+                  {latestMessage.isDeleted
+                    ? <em>Message deleted</em>
+                    : latestMessage.content || latestMessage.messageType
+                  }
+                </p>
+              </div>
+            )}
+            
+            {unreadCount > 0 && (
+              <div className="bg-primary text-black text-[10px] font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center shrink-0">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

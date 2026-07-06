@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useChatStore } from '../store/chatStore';
 import { getSocket } from '../utils/socket';
 import { FiSend, FiPaperclip, FiSmile, FiImage, FiFile, FiX } from 'react-icons/fi';
@@ -12,12 +12,21 @@ const MessageInput = () => {
   const [showAttachMenu, setShowAttachMenu] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
-  const { selectedChat } = useChatStore();
+  const { selectedChat, replyingTo, setReplyingTo } = useChatStore();
   const socket = getSocket();
   const typingTimeoutRef = useRef(null);
   const isTypingRef = useRef(false);
   const fileInputRef = useRef(null);
   const imageInputRef = useRef(null);
+  const emojiPickerRef = useRef(null);
+  const attachMenuRef = useRef(null);
+
+  const [isRecording, setIsRecording] = useState(false);
+
+  useEffect(() => {
+    setShowEmojiPicker(false);
+    setShowAttachMenu(false);
+  }, [selectedChat]);
 
   const handleTyping = (value) => {
     setMessage(value);
@@ -86,11 +95,13 @@ const MessageInput = () => {
       content: message.trim(),
       messageType,
       fileUrl,
-      fileName
+      fileName,
+      replyTo: replyingTo?._id || null
     });
 
     setMessage('');
     setSelectedFile(null);
+    setReplyingTo(null);
   };
 
   const handleEmojiClick = (emojiData) => {
@@ -125,7 +136,19 @@ const MessageInput = () => {
   };
 
   return (
-    <div className="mx-6 mb-6 p-3 bg-black/60 backdrop-blur-xl border border-[#222] rounded-[24px] shadow-2xl z-10">
+    <div className="mx-4 md:mx-6 mb-4 md:mb-6 p-2 md:p-3 bg-[#1a1b1e]/80 backdrop-blur-2xl border border-white/5 rounded-3xl shadow-[0_-5px_25px_rgba(0,0,0,0.3)] z-10 flex flex-col gap-2 transition-all">
+      {/* Reply Preview */}
+      {replyingTo && (
+        <div className="px-4 py-2 bg-black/40 border-l-4 border-primary rounded-lg flex justify-between items-start">
+          <div className="flex flex-col overflow-hidden">
+            <span className="text-primary text-xs font-bold">Reply to {replyingTo.sender?.username}</span>
+            <span className="text-gray-300 text-sm truncate">{replyingTo.content || replyingTo.messageType}</span>
+          </div>
+          <button onClick={() => setReplyingTo(null)} className="text-gray-400 hover:text-white transition">
+            <FiX />
+          </button>
+        </div>
+      )}
       {/* Selected File Preview */}
       {selectedFile && (
         <div className="mb-3 p-3 bg-[#111] rounded-lg flex items-center justify-between">
@@ -172,12 +195,18 @@ const MessageInput = () => {
             <FiSmile className="text-2xl" />
           </button>
           {showEmojiPicker && (
-            <div className="absolute bottom-12 left-0 z-50">
-              <EmojiPicker
-                onEmojiClick={handleEmojiClick}
-                theme="dark"
-              />
-            </div>
+            <>
+              <div
+                className="fixed inset-0 z-10"
+                onClick={() => setShowEmojiPicker(false)}
+              ></div>
+              <div className="absolute bottom-12 left-0 z-50">
+                <EmojiPicker
+                  onEmojiClick={handleEmojiClick}
+                  theme="dark"
+                />
+              </div>
+            </>
           )}
         </div>
 
@@ -220,13 +249,15 @@ const MessageInput = () => {
         </div>
 
         {/* Message Input */}
-        <input
-          type="text"
-          value={message}
-          onChange={(e) => handleTyping(e.target.value)}
-          placeholder="Type a message..."
-          className="flex-1 bg-[#111] border border-border rounded-full px-6 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-primary"
-        />
+        <div className="flex-1 flex items-center bg-[#25262b] rounded-full border border-white/5 focus-within:border-primary/50 focus-within:bg-[#2c2d33] transition-all px-2 shadow-inner">
+          <input
+            type="text"
+            value={message}
+            onChange={(e) => handleTyping(e.target.value)}
+            placeholder="Type a message..."
+            className="flex-1 bg-transparent text-white px-4 py-3 md:py-3.5 focus:outline-none placeholder-gray-500 text-[15px]"
+          />
+        </div>
 
         {/* Send Button */}
         <button

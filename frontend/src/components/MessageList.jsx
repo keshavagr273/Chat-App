@@ -15,7 +15,7 @@ const MessageList = () => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages.length]);
 
   const isTyping = selectedChat && typingUsers[selectedChat._id];
 
@@ -47,8 +47,8 @@ const MessageList = () => {
             return (
               <div key={message._id}>
                 {showDateSeparator && (
-                  <div className="flex justify-center my-6">
-                    <span className="bg-[#1a1a1a] border border-[#333] text-gray-400 text-xs font-semibold px-4 py-1.5 rounded-full shadow-sm">
+                  <div className="flex justify-center my-6 sticky top-2 z-10">
+                    <span className="bg-[#1a1b1e]/80 backdrop-blur-md border border-white/5 text-gray-300 text-xs font-medium px-4 py-1.5 rounded-full shadow-[0_4px_15px_rgba(0,0,0,0.3)]">
                       {dateLabel}
                     </span>
                   </div>

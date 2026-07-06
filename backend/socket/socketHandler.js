@@ -73,7 +73,7 @@ const initializeSocket = (io) => {
     // Send message
     socket.on('send_message', async (data) => {
       try {
-        const { chatId, content, messageType, fileUrl, fileName } = data;
+        const { chatId, content, messageType, fileUrl, fileName, replyTo } = data;
 
         // Check if chat still exists
         const chat = await Chat.findById(chatId);
@@ -101,12 +101,18 @@ const initializeSocket = (io) => {
           chat: chatId,
           messageType: messageType || 'text',
           fileUrl: fileUrl || '',
-          fileName: fileName || ''
+          fileName: fileName || '',
+          replyTo: replyTo || null
         });
 
         // Populate message fields
         message = await message.populate('sender', 'username avatar');
         message = await message.populate('chat');
+        message = await message.populate({
+          path: 'replyTo',
+          select: 'content sender messageType fileUrl fileName isDeleted',
+          populate: { path: 'sender', select: 'username' }
+        });
         message = await User.populate(message, {
           path: 'chat.users',
           select: 'username avatar email'
@@ -311,23 +317,42 @@ const initializeSocket = (io) => {
 
     socket.on('delete_message', async (data) => {
       try {
-        const { messageId, chatId } = data;
+        const { messageId, chatId, deleteType } = data;
 
         const message = await Message.findById(messageId);
 
-        if (!message || message.sender.toString() !== socket.userId) {
-          return socket.emit('error', { message: 'Cannot delete this message' });
+        if (!message) return;
+
+        if (deleteType === 'for_me') {
+          // Add user to deletedFor array
+          if (!message.deletedFor) {
+            message.deletedFor = [];
+          }
+          if (!message.deletedFor.includes(socket.userId)) {
+            message.deletedFor.push(socket.userId);
+            await message.save();
+          }
+
+          socket.emit('message_deleted_for_me', {
+            messageId,
+            chatId
+          });
+        } else {
+          // Delete for everyone
+          if (message.sender.toString() !== socket.userId) {
+            return socket.emit('error', { message: 'Cannot delete this message' });
+          }
+
+          message.isDeleted = true;
+          message.deletedAt = Date.now();
+          message.content = 'This message was deleted';
+          await message.save();
+
+          io.to(chatId).emit('message_deleted', {
+            messageId,
+            deletedAt: message.deletedAt
+          });
         }
-
-        message.isDeleted = true;
-        message.deletedAt = Date.now();
-        message.content = 'This message was deleted';
-        await message.save();
-
-        io.to(chatId).emit('message_deleted', {
-          messageId,
-          deletedAt: message.deletedAt
-        });
       } catch (error) {
         console.error('Delete message error:', error);
       }

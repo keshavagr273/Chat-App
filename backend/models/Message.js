@@ -71,6 +71,16 @@ const messageSchema = new mongoose.Schema(
     },
     deletedAt: {
       type: Date
+    },
+    deletedFor: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+      }
+    ],
+    replyTo: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Message'
     }
   },
   {

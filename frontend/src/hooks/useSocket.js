@@ -28,7 +28,10 @@ export const useSocket = () => {
     deleteMessage,
     selectedChat,
     removeChat,
-    clearChatMessages
+    clearChatMessages,
+    incrementUnreadCount,
+    removeReaction,
+    removeMessageLocally
   } = useChatStore();
 
   const { user } = useAuthStore();
@@ -55,6 +58,8 @@ export const useSocket = () => {
     socket.on('receive_message', (message) => {
       if (selectedChat?._id === message.chat._id) {
         addMessage(message);
+      } else {
+        incrementUnreadCount(message.chat._id);
       }
       updateLatestMessage(message.chat._id, message);
     });
@@ -88,7 +93,7 @@ export const useSocket = () => {
     });
 
     socket.on('reaction_removed', ({ messageId, userId }) => {
-      // Handle reaction removal
+      removeReaction(messageId, userId);
     });
 
     // Edit and Delete
@@ -102,6 +107,10 @@ export const useSocket = () => {
 
     socket.on('message_deleted', ({ messageId, deletedAt }) => {
       deleteMessage(messageId);
+    });
+
+    socket.on('message_deleted_for_me', ({ messageId }) => {
+      removeMessageLocally(messageId);
     });
 
     // Chat management events
@@ -200,6 +209,7 @@ export const useSocket = () => {
       socket.off('reaction_removed');
       socket.off('message_edited');
       socket.off('message_deleted');
+      socket.off('message_deleted_for_me');
       socket.off('chat_deleted');
       socket.off('chat_messages_cleared');
       socket.off('incoming_call');

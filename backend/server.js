@@ -37,11 +37,19 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static('uploads'));
 
 // Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/users', require('./routes/users'));
-app.use('/api/chats', require('./routes/chats'));
-app.use('/api/messages', require('./routes/messages'));
-app.use('/api/upload', require('./routes/upload'));
+const authRoutes = require('./routes/auth');
+const userRoutes = require('./routes/users');
+const chatRoutes = require('./routes/chats');
+const messageRoutes = require('./routes/messages');
+const uploadRoutes = require('./routes/upload');
+const previewRoutes = require('./routes/preview');
+
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/chats', chatRoutes);
+app.use('/api/messages', messageRoutes);
+app.use('/api/upload', uploadRoutes);
+app.use('/api/preview', previewRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

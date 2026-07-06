@@ -9,18 +9,40 @@ export const useChatStore = create((set, get) => ({
   onlineUsers: [],
   loading: false,
   typingUsers: {},
+  unreadCounts: {},
+  replyingTo: null,
+
+  setReplyingTo: (message) => set({ replyingTo: message }),
 
   setChats: (chats) => set({ chats }),
 
   setSelectedChat: (chat) => {
     const currentChat = get().selectedChat;
-    // Only clear messages if switching to a different chat
     if (currentChat?._id !== chat?._id) {
-      set({ selectedChat: chat, messages: [] });
+      set({ selectedChat: chat, messages: [], replyingTo: null });
+      if (chat) {
+        get().clearUnreadCount(chat._id);
+      }
     } else {
-      // Same chat clicked - don't clear messages
       set({ selectedChat: chat });
     }
+  },
+
+  incrementUnreadCount: (chatId) => {
+    set((state) => ({
+      unreadCounts: {
+        ...state.unreadCounts,
+        [chatId]: (state.unreadCounts[chatId] || 0) + 1
+      }
+    }));
+  },
+
+  clearUnreadCount: (chatId) => {
+    set((state) => {
+      const newCounts = { ...state.unreadCounts };
+      delete newCounts[chatId];
+      return { unreadCounts: newCounts };
+    });
   },
 
   addMessage: (message) => {
@@ -37,6 +59,16 @@ export const useChatStore = create((set, get) => ({
     }));
   },
 
+  removeReaction: (messageId, userId) => {
+    set((state) => ({
+      messages: state.messages.map((msg) =>
+        msg._id === messageId 
+          ? { ...msg, reactions: msg.reactions?.filter(r => (r.user?._id || r.user) !== userId) } 
+          : msg
+      )
+    }));
+  },
+
   deleteMessage: (messageId) => {
     set((state) => ({
       messages: state.messages.map((msg) =>
@@ -44,6 +76,12 @@ export const useChatStore = create((set, get) => ({
           ? { ...msg, isDeleted: true, content: 'This message was deleted' }
           : msg
       )
+    }));
+  },
+
+  removeMessageLocally: (messageId) => {
+    set((state) => ({
+      messages: state.messages.filter((msg) => msg._id !== messageId)
     }));
   },
 

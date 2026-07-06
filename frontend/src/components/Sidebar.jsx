@@ -9,7 +9,7 @@ import Avatar from './Avatar';
 
 const Sidebar = () => {
   const { user, logout } = useAuthStore();
-  const { chats, selectedChat, setSelectedChat } = useChatStore();
+  const { chats, selectedChat, setSelectedChat, unreadCounts } = useChatStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [showNewChat, setShowNewChat] = useState(false);
 
@@ -80,6 +80,7 @@ const Sidebar = () => {
                 <ChatItem
                   chat={chat}
                   isSelected={selectedChat?._id === chat._id}
+                  unreadCount={unreadCounts[chat._id] || 0}
                   onClick={() => setSelectedChat(chat)}
                 />
               </div>
