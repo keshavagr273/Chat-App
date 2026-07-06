@@ -4,12 +4,14 @@ import { getSocket } from '../utils/socket';
 import { FiSend, FiPaperclip, FiSmile, FiImage, FiFile, FiX } from 'react-icons/fi';
 import EmojiPicker from 'emoji-picker-react';
 import toast from 'react-hot-toast';
+import api from '../utils/api';
 
 const MessageInput = () => {
   const [message, setMessage] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showAttachMenu, setShowAttachMenu] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
   const { selectedChat } = useChatStore();
   const socket = getSocket();
   const typingTimeoutRef = useRef(null);
@@ -42,10 +44,36 @@ const MessageInput = () => {
     }, 2000);
   };
 
-  const handleSend = (e) => {
+  const handleSend = async (e) => {
     e.preventDefault();
 
-    if (!message.trim() || !socket || !selectedChat) return;
+    if ((!message.trim() && !selectedFile) || !socket || !selectedChat) return;
+
+    let fileUrl = '';
+    let fileName = '';
+    let messageType = 'text';
+
+    if (selectedFile) {
+      setIsUploading(true);
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+
+      try {
+        const { data } = await api.post('/upload', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        
+        fileUrl = data.data.fileUrl;
+        fileName = data.data.fileName;
+        messageType = data.data.mimetype.startsWith('image/') ? 'image' : 'file';
+        
+      } catch (error) {
+        setIsUploading(false);
+        toast.error('File upload failed');
+        return;
+      }
+      setIsUploading(false);
+    }
 
     // Stop typing
     socket.emit('stop_typing', { chatId: selectedChat._id });
@@ -56,10 +84,13 @@ const MessageInput = () => {
     socket.emit('send_message', {
       chatId: selectedChat._id,
       content: message.trim(),
-      messageType: 'text'
+      messageType,
+      fileUrl,
+      fileName
     });
 
     setMessage('');
+    setSelectedFile(null);
   };
 
   const handleEmojiClick = (emojiData) => {
@@ -85,12 +116,6 @@ const MessageInput = () => {
         return;
       }
       setSelectedFile(file);
-      toast.success(`File selected: ${file.name}`);
-      // TODO: Implement file upload functionality
-      toast('File upload feature coming soon! 📎', {
-        icon: '🚀',
-        duration: 3000
-      });
     }
     e.target.value = '';
   };
@@ -100,10 +125,10 @@ const MessageInput = () => {
   };
 
   return (
-    <div className="bg-dark-200 border-t border-gray-700 p-4">
+    <div className="mx-6 mb-6 p-3 bg-black/60 backdrop-blur-xl border border-[#222] rounded-[24px] shadow-2xl z-10">
       {/* Selected File Preview */}
       {selectedFile && (
-        <div className="mb-3 p-3 bg-dark-300 rounded-lg flex items-center justify-between">
+        <div className="mb-3 p-3 bg-[#111] rounded-lg flex items-center justify-between">
           <div className="flex items-center gap-2">
             <FiFile className="text-primary text-xl" />
             <div>
@@ -174,19 +199,19 @@ const MessageInput = () => {
                 className="fixed inset-0 z-10"
                 onClick={() => setShowAttachMenu(false)}
               ></div>
-              <div className="absolute bottom-12 left-0 w-40 bg-dark-300 border border-gray-700 rounded-lg shadow-lg z-20 py-1">
+              <div className="absolute bottom-12 left-0 w-40 bg-[#111] border border-border rounded-lg shadow-lg z-20 py-1">
                 <button
                   onClick={() => handleFileSelect('image')}
                   className="w-full px-4 py-2 text-left text-gray-300 hover:bg-dark-200 flex items-center gap-3 transition"
                 >
-                  <FiImage className="text-lg text-green-400" />
+                  <FiImage className="text-lg text-primary" />
                   <span>Image</span>
                 </button>
                 <button
                   onClick={() => handleFileSelect('file')}
                   className="w-full px-4 py-2 text-left text-gray-300 hover:bg-dark-200 flex items-center gap-3 transition"
                 >
-                  <FiFile className="text-lg text-blue-400" />
+                  <FiFile className="text-lg text-primary" />
                   <span>File</span>
                 </button>
               </div>
@@ -200,16 +225,20 @@ const MessageInput = () => {
           value={message}
           onChange={(e) => handleTyping(e.target.value)}
           placeholder="Type a message..."
-          className="flex-1 bg-dark-300 border border-gray-700 rounded-full px-6 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
+          className="flex-1 bg-[#111] border border-border rounded-full px-6 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-primary"
         />
 
         {/* Send Button */}
         <button
           type="submit"
-          disabled={!message.trim()}
-          className="bg-gradient-to-r from-primary to-secondary text-white p-3 rounded-full hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={(!message.trim() && !selectedFile) || isUploading}
+          className="bg-primary hover:bg-secondary text-black p-3 rounded-full hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-primary/20"
         >
-          <FiSend className="text-xl" />
+          {isUploading ? (
+            <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+          ) : (
+            <FiSend className="text-xl" />
+          )}
         </button>
       </form>
     </div>

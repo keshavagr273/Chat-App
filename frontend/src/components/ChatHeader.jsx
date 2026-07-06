@@ -6,12 +6,15 @@ import { FiMoreVertical, FiPhone, FiVideo, FiTrash2, FiUserX, FiInfo } from 'rea
 import { getSocket } from '../utils/socket';
 import { getUserMedia, createPeerConnection, createOffer, addStreamToPeer } from '../utils/webrtc';
 import toast from 'react-hot-toast';
+import Avatar from './Avatar';
+import ChatInfoModal from './ChatInfoModal';
 
 const ChatHeader = () => {
   const { user } = useAuthStore();
   const { selectedChat, onlineUsers, clearMessages, deleteChat } = useChatStore();
   const { startCall, setLocalStream, setPeerConnection, setRemoteStream, isInCall, isCalling } = useCallStore();
   const [showMenu, setShowMenu] = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState(false);
   const socket = getSocket();
 
   if (!selectedChat) return null;
@@ -190,30 +193,27 @@ const ChatHeader = () => {
   };
 
   const handleChatInfo = () => {
-    toast('Chat info feature coming soon!', {
-      icon: 'ℹ️',
-      duration: 3000
-    });
+    setShowInfoModal(true);
     setShowMenu(false);
   };
 
   return (
-    <div className="h-16 bg-dark-200 border-b border-gray-700 px-6 flex items-center justify-between">
+    <div className="h-16 bg-black/50 backdrop-blur-md border-b border-border px-6 flex items-center justify-between sticky top-0 z-10">
       {/* User Info */}
       <div className="flex items-center gap-3">
         <div className="relative">
-          <img
+          <Avatar
             src={avatar}
-            alt={name}
-            className="w-10 h-10 rounded-full object-cover"
+            name={name}
+            className="w-10 h-10"
           />
           {isOnline && (
-            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 rounded-full border-2 border-dark-200"></div>
+            <div className="absolute bottom-0 right-0 w-3 h-3 bg-primary rounded-full border-2 border-black"></div>
           )}
         </div>
         <div>
           <h3 className="text-white font-semibold">{name}</h3>
-          <p className={`text-xs ${isOnline ? 'text-green-400' : 'text-gray-400'}`}>
+          <p className={`text-xs ${isOnline ? 'text-primary' : 'text-gray-400'}`}>
             {status}
           </p>
         </div>
@@ -251,7 +251,7 @@ const ChatHeader = () => {
                 className="fixed inset-0 z-10"
                 onClick={() => setShowMenu(false)}
               ></div>
-              <div className="absolute right-0 mt-2 w-48 bg-dark-300 border border-gray-700 rounded-lg shadow-lg z-20 py-1">
+              <div className="absolute right-0 mt-2 w-48 bg-dark-100 border border-border rounded-lg shadow-lg z-20 py-1">
                 <button
                   onClick={handleChatInfo}
                   className="w-full px-4 py-2 text-left text-gray-300 hover:bg-dark-200 flex items-center gap-3 transition"
@@ -278,6 +278,14 @@ const ChatHeader = () => {
           )}
         </div>
       </div>
+
+      <ChatInfoModal 
+        isOpen={showInfoModal} 
+        onClose={() => setShowInfoModal(false)} 
+        chat={selectedChat}
+        currentUser={user}
+        onlineUsers={onlineUsers}
+      />
     </div>
   );
 };

@@ -1,6 +1,7 @@
 import { format } from 'date-fns';
-import { FiCheck, FiCheckCircle } from 'react-icons/fi';
+import { FiCheck, FiCheckCircle, FiFile } from 'react-icons/fi';
 import { useAuthStore } from '../store/authStore';
+import Avatar from './Avatar';
 
 const Message = ({ message, isOwn }) => {
   const { user } = useAuthStore();
@@ -14,10 +15,10 @@ const Message = ({ message, isOwn }) => {
         {/* Sender name (for group chats) */}
         {!isOwn && (
           <div className="flex items-center gap-2 mb-1">
-            <img
+            <Avatar
               src={message.sender.avatar}
-              alt={message.sender.username}
-              className="w-6 h-6 rounded-full"
+              name={message.sender.username}
+              className="w-6 h-6"
             />
             <span className="text-xs text-gray-400">{message.sender.username}</span>
           </div>
@@ -25,10 +26,10 @@ const Message = ({ message, isOwn }) => {
 
         {/* Message Bubble */}
         <div
-          className={`rounded-2xl px-4 py-2 ${isOwn
-              ? 'bg-gradient-to-r from-primary to-secondary text-white rounded-tr-none'
-              : 'bg-dark-200 text-white rounded-tl-none'
-            }`}
+          className={`rounded-2xl px-5 py-3 ${isOwn
+              ? 'bg-primary text-black rounded-tr-sm shadow-lg shadow-primary/20'
+              : 'bg-[#111] text-gray-200 border border-border rounded-tl-sm shadow-md'
+            } leading-relaxed tracking-wide`}
         >
           {message.isDeleted ? (
             <p className="italic text-gray-400">{message.content}</p>
@@ -38,20 +39,35 @@ const Message = ({ message, isOwn }) => {
                 <p className="break-words">{message.content}</p>
               )}
               {message.messageType === 'image' && (
-                <img
-                  src={message.fileUrl}
-                  alt="Shared"
-                  className="max-w-sm rounded-lg"
-                />
+                <div className="mt-1 relative group cursor-pointer overflow-hidden rounded-xl border border-black/10 shadow-sm">
+                  <a href={message.fileUrl} target="_blank" rel="noreferrer">
+                    <img
+                      src={message.fileUrl}
+                      alt="Shared attachment"
+                      className="max-w-[240px] md:max-w-sm max-h-[300px] object-cover hover:scale-[1.02] transition-transform duration-300"
+                    />
+                  </a>
+                  {message.content && <p className="mt-2 break-words text-sm">{message.content}</p>}
+                </div>
               )}
               {message.messageType === 'file' && (
-                <a
-                  href={message.fileUrl}
-                  download
-                  className="flex items-center gap-2 hover:underline"
-                >
-                  📎 {message.fileName}
-                </a>
+                <div className="mt-1">
+                  <a
+                    href={message.fileUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={`flex items-center gap-3 p-3 rounded-xl border ${isOwn ? 'bg-black/10 border-black/10 text-black hover:bg-black/20' : 'bg-[#1a1a1a] border-[#222] text-gray-200 hover:bg-[#222]'} transition-colors max-w-[280px] md:max-w-sm`}
+                  >
+                    <div className={`p-2.5 rounded-lg shrink-0 ${isOwn ? 'bg-black/10 text-black' : 'bg-black/40 text-primary'}`}>
+                      <FiFile className="text-xl" />
+                    </div>
+                    <div className="flex flex-col min-w-0 overflow-hidden">
+                      <span className="font-semibold text-sm truncate">{message.fileName || 'Attachment'}</span>
+                      <span className={`text-[10px] uppercase font-bold tracking-wider mt-0.5 ${isOwn ? 'text-black/60' : 'text-gray-500'}`}>Click to view</span>
+                    </div>
+                  </a>
+                  {message.content && <p className="mt-2 break-words text-sm">{message.content}</p>}
+                </div>
               )}
             </>
           )}
@@ -75,7 +91,7 @@ const Message = ({ message, isOwn }) => {
           {isOwn && (
             <span>
               {isRead ? (
-                <FiCheckCircle className="text-blue-400" />
+                <FiCheckCircle className="text-primary" />
               ) : isDelivered ? (
                 <FiCheckCircle className="text-gray-400" />
               ) : (

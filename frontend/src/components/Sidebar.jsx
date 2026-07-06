@@ -5,6 +5,7 @@ import api from '../utils/api';
 import { FiSearch, FiLogOut, FiMessageCircle } from 'react-icons/fi';
 import ChatItem from './ChatItem';
 import NewChatModal from './NewChatModal';
+import Avatar from './Avatar';
 
 const Sidebar = () => {
   const { user, logout } = useAuthStore();
@@ -20,17 +21,11 @@ const Sidebar = () => {
   });
 
   return (
-    <div className="w-80 bg-[#161c2d] border-r border-[#1e2538] flex flex-col h-full shrink-0 shadow-lg relative z-10">
+    <div className="w-80 bg-dark-200 border-r border-border flex flex-col h-full shrink-0 shadow-lg relative z-10">
       {/* Profile Header */}
       <div className="p-5 flex items-center justify-between mt-1">
         <div className="flex items-center gap-3">
-          {user?.avatar ? (
-            <img src={user.avatar} alt={user.username} className="w-10 h-10 rounded-full object-cover shadow-sm bg-gray-800" />
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-yellow-400 text-[#161c2d] flex items-center justify-center font-bold text-sm shadow-sm ring-2 ring-[#161c2d]">
-              {user?.username?.substring(0, 2).toUpperCase() || 'JD'}
-            </div>
-          )}
+          <Avatar src={user?.avatar} name={user?.username} className="w-10 h-10 shadow-sm" />
           <div className="flex flex-col justify-center">
             <h3 className="text-gray-100 font-semibold text-sm leading-tight tracking-wide">{user?.username}</h3>
             <p className="text-[11px] text-emerald-500 font-medium mt-0.5">Online</p>
@@ -54,16 +49,16 @@ const Sidebar = () => {
             placeholder="Search chats..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-[#0e1320] border border-[#273147] rounded-lg text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary/50 transition-all shadow-inner"
+            className="w-full pl-9 pr-4 py-2 bg-[#111] border border-border rounded-lg text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all shadow-inner"
           />
         </div>
       </div>
 
       {/* New Chat Button */}
-      <div className="px-5 pb-5 border-b border-[#222b40]">
+      <div className="px-5 pb-5 border-b border-border">
         <button
           onClick={() => setShowNewChat(true)}
-          className="w-full bg-secondary hover:bg-[#7c3aed] text-white font-medium py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 text-sm shadow-md shadow-secondary/20 hover:shadow-secondary/40 active:scale-[0.98]"
+          className="w-full bg-primary hover:bg-secondary text-black font-medium py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 text-sm shadow-md shadow-primary/20 hover:shadow-primary/40 active:scale-[0.98]"
         >
           <FiMessageCircle className="text-[18px]" />
           New Chat
@@ -71,7 +66,7 @@ const Sidebar = () => {
       </div>
 
       {/* Chat List */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar bg-[#161c2d]">
+      <div className="flex-1 overflow-y-auto custom-scrollbar bg-dark-200">
         {filteredChats.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-500 px-6 text-center mt-[-20%]">
             <FiMessageCircle className="text-[40px] mb-3 opacity-40 stroke-[1.5]" />

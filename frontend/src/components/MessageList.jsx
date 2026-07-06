@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { isSameDay, format, isToday, isYesterday } from 'date-fns';
 import { useChatStore } from '../store/chatStore';
 import { useAuthStore } from '../store/authStore';
 import Message from './Message';
@@ -26,13 +27,39 @@ const MessageList = () => {
         </div>
       ) : (
         <div className="space-y-4">
-          {messages.map((message) => (
-            <Message
-              key={message._id}
-              message={message}
-              isOwn={message.sender._id === user._id}
-            />
-          ))}
+          {messages.map((message, index) => {
+            const currentMessageDate = new Date(message.createdAt);
+            const previousMessageDate = index > 0 ? new Date(messages[index - 1].createdAt) : null;
+            
+            const showDateSeparator = !previousMessageDate || !isSameDay(currentMessageDate, previousMessageDate);
+            
+            let dateLabel = '';
+            if (showDateSeparator) {
+              if (isToday(currentMessageDate)) {
+                dateLabel = 'Today';
+              } else if (isYesterday(currentMessageDate)) {
+                dateLabel = 'Yesterday';
+              } else {
+                dateLabel = format(currentMessageDate, 'MMMM do, yyyy');
+              }
+            }
+
+            return (
+              <div key={message._id}>
+                {showDateSeparator && (
+                  <div className="flex justify-center my-6">
+                    <span className="bg-[#1a1a1a] border border-[#333] text-gray-400 text-xs font-semibold px-4 py-1.5 rounded-full shadow-sm">
+                      {dateLabel}
+                    </span>
+                  </div>
+                )}
+                <Message
+                  message={message}
+                  isOwn={message.sender._id === user._id}
+                />
+              </div>
+            );
+          })}
 
           {/* Typing Indicator */}
           {isTyping && (

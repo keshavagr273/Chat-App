@@ -2,6 +2,7 @@ import { format } from 'date-fns';
 import { useAuthStore } from '../store/authStore';
 import { useChatStore } from '../store/chatStore';
 import { FiCheck, FiCheckCircle } from 'react-icons/fi';
+import Avatar from './Avatar';
 
 const ChatItem = ({ chat, isSelected, onClick }) => {
   const { user } = useAuthStore();
@@ -30,19 +31,19 @@ const ChatItem = ({ chat, isSelected, onClick }) => {
   return (
     <div
       onClick={onClick}
-      className={`p-4 border-b border-gray-700 cursor-pointer transition ${isSelected ? 'bg-dark-300' : 'hover:bg-dark-300'
+      className={`p-4 border-b border-border cursor-pointer transition ${isSelected ? 'bg-dark-100' : 'hover:bg-dark-100'
         }`}
     >
       <div className="flex items-center gap-3">
         {/* Avatar */}
         <div className="relative">
-          <img
+          <Avatar
             src={avatar}
-            alt={name}
-            className="w-12 h-12 rounded-full object-cover"
+            name={name}
+            className="w-12 h-12"
           />
           {isOnline && (
-            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 rounded-full border-2 border-dark-200"></div>
+            <div className="absolute bottom-0 right-0 w-3 h-3 bg-primary rounded-full border-2 border-dark-200"></div>
           )}
         </div>
 
@@ -62,7 +63,7 @@ const ChatItem = ({ chat, isSelected, onClick }) => {
               {latestMessage.sender === user._id && (
                 <span className="text-gray-400">
                   {latestMessage.readBy?.length > 0 ? (
-                    <FiCheckCircle className="text-blue-400" />
+                    <FiCheckCircle className="text-primary" />
                   ) : (
                     <FiCheck />
                   )}

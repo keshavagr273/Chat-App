@@ -40,16 +40,16 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#0d0f14] relative overflow-hidden font-sans px-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-black relative overflow-hidden font-sans px-4">
       {/* Background Soft Glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#663399]/20 rounded-full blur-[120px] pointer-events-none"></div>
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[120px] pointer-events-none"></div>
 
       {/* Main Card */}
-      <div className="w-full max-w-[420px] bg-[#1a1c22]/95 backdrop-blur-sm border border-[#272a34] rounded-[24px] shadow-2xl p-7 relative z-10 my-4">
+      <div className="w-full max-w-[420px] bg-[#0c0c0c]/95 backdrop-blur-sm border border-[#222] rounded-[24px] shadow-2xl p-7 relative z-10 my-4">
         {/* Logo */}
         <div className="flex justify-center mb-5">
-          <div className="w-[48px] h-[48px] bg-[#e5e7eb] rounded-full flex items-center justify-center shadow-lg">
-            <FiMessageCircle className="text-[#1a1c22] text-xl stroke-[2] translate-y-[-1px] fill-[#1a1c22]" />
+          <div className="w-[48px] h-[48px] bg-primary/10 border border-primary/20 rounded-full flex items-center justify-center shadow-lg shadow-primary/10">
+            <FiMessageCircle className="text-primary text-xl stroke-[2] translate-y-[-1px]" />
           </div>
         </div>
 
@@ -77,7 +77,7 @@ const Register = () => {
                 name="username"
                 value={formData.username}
                 onChange={handleChange}
-                className="w-full pl-11 pr-4 py-3 bg-[#12141a] border border-[#272a34] rounded-xl text-gray-200 placeholder-[#495466] focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary/50 transition-all text-[16px] placeholder:text-[16px] caret-white"
+                className="w-full pl-11 pr-4 py-3 bg-[#111] border border-[#222] rounded-xl text-gray-200 placeholder-[#495466] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all text-[16px] placeholder:text-[16px] caret-white"
                 placeholder="johndoe"
                 required
                 minLength={3}
@@ -99,7 +99,7 @@ const Register = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full pl-11 pr-4 py-3 bg-[#12141a] border border-[#272a34] rounded-xl text-gray-200 placeholder-[#495466] focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary/50 transition-all text-[16px] placeholder:text-[16px] caret-white"
+                className="w-full pl-11 pr-4 py-3 bg-[#111] border border-[#222] rounded-xl text-gray-200 placeholder-[#495466] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all text-[16px] placeholder:text-[16px] caret-white"
                 placeholder="you@example.com"
                 required
               />
@@ -120,7 +120,7 @@ const Register = () => {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full pl-11 pr-4 py-3 bg-[#12141a] border border-[#272a34] rounded-xl text-gray-200 placeholder-[#495466] focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary/50 transition-all text-[16px] placeholder:text-[16px] caret-white tracking-[0.2em]"
+                className="w-full pl-11 pr-4 py-3 bg-[#111] border border-[#222] rounded-xl text-gray-200 placeholder-[#495466] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all text-[16px] placeholder:text-[16px] caret-white tracking-[0.2em]"
                 placeholder="••••••••"
                 required
                 minLength={6}
@@ -142,7 +142,7 @@ const Register = () => {
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className="w-full pl-11 pr-4 py-3 bg-[#12141a] border border-[#272a34] rounded-xl text-gray-200 placeholder-[#495466] focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary/50 transition-all text-[16px] placeholder:text-[16px] caret-white tracking-[0.2em]"
+                className="w-full pl-11 pr-4 py-3 bg-[#111] border border-[#222] rounded-xl text-gray-200 placeholder-[#495466] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all text-[16px] placeholder:text-[16px] caret-white tracking-[0.2em]"
                 placeholder="••••••••"
                 required
               />
@@ -153,7 +153,7 @@ const Register = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#4a148c] hover:bg-[#5a189a] text-gray-100 font-semibold py-3 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed mt-6 shadow-lg shadow-[#4a148c]/20 active:scale-[0.98] text-[17px]"
+            className="w-full bg-primary hover:bg-secondary text-black font-semibold py-3 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed mt-6 shadow-lg shadow-primary/10 active:scale-[0.98] text-[17px]"
           >
             {loading ? 'Creating account...' : 'Sign Up'}
           </button>
@@ -162,7 +162,7 @@ const Register = () => {
         {/* Login Link */}
         <p className="mt-6 text-center text-[#8e98a8] text-[15px]">
           Already have an account?{' '}
-          <Link to="/login" className="text-[#9d81d2] hover:text-[#c4b5fd] transition-colors">
+          <Link to="/login" className="text-primary hover:text-secondary transition-colors">
             Sign in
           </Link>
         </p>
