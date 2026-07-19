@@ -22,11 +22,7 @@ export const getUserMedia = async (callType) => {
                 noiseSuppression: true,
                 autoGainControl: true
             },
-            video: callType === 'video' ? {
-                width: { ideal: 1280, max: 1920 },
-                height: { ideal: 720, max: 1080 },
-                frameRate: { ideal: 30 }
-            } : false
+            video: callType === 'video' ? true : false
         };
 
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
