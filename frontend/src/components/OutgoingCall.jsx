@@ -15,16 +15,20 @@ const OutgoingCall = () => {
 
     // Auto-cancel call after 60 seconds if not answered
     useEffect(() => {
-        if (isCalling) {
-            const timeout = setTimeout(() => {
-                toast.error('No answer. Call ended.');
-                handleCancel();
-            }, 60000); // 60 seconds
+        if (!isCalling) return;
 
-            return () => {
-                clearTimeout(timeout);
-            };
-        }
+        const timeout = setTimeout(() => {
+            // Read fresh values from socket module to avoid stale closure
+            const currentSocket = getSocket();
+            const currentReceiver = useCallStore.getState().receiver;
+            toast.error('No answer. Call ended.');
+            if (currentSocket && currentReceiver) {
+                currentSocket.emit('call_ended', { to: currentReceiver._id });
+            }
+            useCallStore.getState().endCall();
+        }, 60000);
+
+        return () => clearTimeout(timeout);
     }, [isCalling]);
 
     const handleCancel = () => {

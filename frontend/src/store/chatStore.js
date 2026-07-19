@@ -129,7 +129,7 @@ export const useChatStore = create((set, get) => ({
   },
 
   fetchMessages: async (chatId) => {
-    set({ loading: true });
+    set({ loading: true, messages: [] }); // clear immediately to prevent stale flash
     try {
       const { data } = await api.get(`/messages/${chatId}`);
       set({ messages: data.data, loading: false });

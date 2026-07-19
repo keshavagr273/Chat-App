@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useCallStore } from '../store/callStore';
 import { FiPhone, FiPhoneOff, FiVideo } from 'react-icons/fi';
 import { getSocket } from '../utils/socket';
-import { getUserMedia, createPeerConnection, addStreamToPeer, handleOffer, createAnswer } from '../utils/webrtc';
+import { getUserMedia, createPeerConnection, addStreamToPeer, handleOffer, createAnswer, flushIceCandidateQueue, clearIceCandidateQueue } from '../utils/webrtc';
 import toast from 'react-hot-toast';
 
 const IncomingCall = () => {
@@ -40,6 +40,27 @@ const IncomingCall = () => {
             // Set peer connection BEFORE setting up handlers
             setPeerConnection(peerConnection);
 
+            // ⚠️ CRITICAL: Register ALL event handlers BEFORE adding tracks or processing offer.
+            // ontrack fires during setRemoteDescription/setLocalDescription.
+            // If registered after, the remote stream event is missed → black video.
+
+            // Handle remote stream - THIS IS CRITICAL
+            peerConnection.ontrack = (event) => {
+                if (event.streams && event.streams[0]) {
+                    setRemoteStream(event.streams[0]);
+                }
+            };
+
+            // Handle ICE candidates
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate && socket) {
+                    socket.emit('ice_candidate', {
+                        to: caller._id,
+                        candidate: event.candidate
+                    });
+                }
+            };
+
             // Add connection state handlers
             peerConnection.onconnectionstatechange = () => {
                 if (peerConnection.connectionState === 'failed') {
@@ -68,29 +89,14 @@ const IncomingCall = () => {
                 }
             };
 
-            // Add local stream to peer connection
+            // Add local stream to peer connection AFTER all handlers are registered
             addStreamToPeer(peerConnection, stream);
-
-            // Handle remote stream - THIS IS CRITICAL
-            peerConnection.ontrack = (event) => {
-                if (event.streams && event.streams[0]) {
-                    setRemoteStream(event.streams[0]);
-                }
-            };
-
-            // Handle ICE candidates
-            peerConnection.onicecandidate = (event) => {
-                if (event.candidate && socket) {
-                    socket.emit('ice_candidate', {
-                        to: caller._id,
-                        candidate: event.candidate
-                    });
-                }
-            };
 
             // Handle offer and create answer
             if (offer) {
                 await handleOffer(peerConnection, offer);
+                // Flush any ICE candidates that arrived before handleOffer set the remoteDescription
+                await flushIceCandidateQueue(peerConnection);
                 const answer = await createAnswer(peerConnection);
 
                 if (socket) {
@@ -108,6 +114,7 @@ const IncomingCall = () => {
         } catch (error) {
             console.error('❌ Error accepting call:', error);
             toast.error(error.message || 'Failed to accept call', { id: 'accept-call' });
+            clearIceCandidateQueue();
 
             // Reject the call on error
             if (socket) {

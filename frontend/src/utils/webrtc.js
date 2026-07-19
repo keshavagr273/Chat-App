@@ -1,23 +1,33 @@
 // WebRTC configuration
 const configuration = {
     iceServers: [
+        // Google STUN servers (for direct P2P on same/simple NATs)
         { urls: 'stun:stun.l.google.com:19302' },
         { urls: 'stun:stun1.l.google.com:19302' },
         { urls: 'stun:stun2.l.google.com:19302' },
-        // Add public TURN servers as fallback
+        { urls: 'stun:stun3.l.google.com:19302' },
+        { urls: 'stun:stun4.l.google.com:19302' },
+        // freestun.net — free, reliable, actively maintained TURN servers
+        // Required when users are on different networks/WiFi (most real-world calls)
         {
-            urls: 'turn:openrelay.metered.ca:80',
-            username: 'openrelayproject',
-            credential: 'openrelayproject'
+            urls: 'turn:freestun.net:3478',
+            username: 'free',
+            credential: 'free'
         },
         {
-            urls: 'turn:openrelay.metered.ca:443',
-            username: 'openrelayproject',
-            credential: 'openrelayproject'
+            urls: 'turns:freestun.net:5349',
+            username: 'free',
+            credential: 'free'
+        },
+        // Metered TURN — backup (the OLD openrelay is dead; use numb.viagenie.ca as extra fallback)
+        {
+            urls: 'turn:numb.viagenie.ca',
+            credential: 'muazkh',
+            username: 'webrtc@live.com'
         }
     ],
     iceCandidatePoolSize: 10,
-    iceTransportPolicy: 'all' // Try all connection methods
+    iceTransportPolicy: 'all' // Try all connection methods (STUN + TURN)
 };
 
 // Get user media (camera/microphone)
@@ -62,6 +72,30 @@ export const getUserMedia = async (callType) => {
 // Create peer connection
 export const createPeerConnection = () => {
     return new RTCPeerConnection(configuration);
+};
+
+// ==================== ICE Candidate Queue ====================
+// ICE candidates can arrive before remoteDescription is set.
+// Queue them and flush once the remote description is ready.
+const iceCandidateQueue = [];
+
+export const queueIceCandidate = (candidate) => {
+    iceCandidateQueue.push(candidate);
+};
+
+export const flushIceCandidateQueue = async (peerConnection) => {
+    while (iceCandidateQueue.length > 0) {
+        const candidate = iceCandidateQueue.shift();
+        try {
+            await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+        } catch (err) {
+            console.error('Error flushing queued ICE candidate:', err);
+        }
+    }
+};
+
+export const clearIceCandidateQueue = () => {
+    iceCandidateQueue.length = 0;
 };
 
 // Create and send offer

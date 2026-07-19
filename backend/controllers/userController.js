@@ -1,5 +1,9 @@
 const User = require('../models/User');
 
+// Sanitize error messages — never expose internal details in production
+const errMsg = (error) =>
+  process.env.NODE_ENV === 'production' ? 'Internal server error' : error.message;
+
 // @desc    Get all users except current user
 // @route   GET /api/users
 // @access  Private
@@ -19,16 +23,10 @@ const getUsers = async (req, res) => {
       _id: { $ne: req.user._id }
     }).select('-password');
 
-    res.json({
-      success: true,
-      data: users
-    });
+    res.json({ success: true, data: users });
   } catch (error) {
     console.error('Get users error:', error);
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    res.status(500).json({ success: false, message: errMsg(error) });
   }
 };
 
@@ -40,22 +38,13 @@ const getUserById = async (req, res) => {
     const user = await User.findById(req.params.id).select('-password');
 
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
+      return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    res.json({
-      success: true,
-      data: user
-    });
+    res.json({ success: true, data: user });
   } catch (error) {
     console.error('Get user error:', error);
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    res.status(500).json({ success: false, message: errMsg(error) });
   }
 };
 
@@ -69,10 +58,18 @@ const updateProfile = async (req, res) => {
     const user = await User.findById(req.user._id);
 
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // Fix 7: Check username uniqueness before updating
+    if (username && username !== user.username) {
+      const taken = await User.findOne({ username, _id: { $ne: req.user._id } });
+      if (taken) {
+        return res.status(400).json({
+          success: false,
+          message: 'Username is already taken'
+        });
+      }
     }
 
     user.username = username || user.username;
@@ -81,16 +78,10 @@ const updateProfile = async (req, res) => {
 
     const updatedUser = await user.save();
 
-    res.json({
-      success: true,
-      data: updatedUser
-    });
+    res.json({ success: true, data: updatedUser });
   } catch (error) {
     console.error('Update profile error:', error);
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    res.status(500).json({ success: false, message: errMsg(error) });
   }
 };
 

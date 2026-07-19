@@ -89,7 +89,10 @@ const ActiveCall = () => {
         <div className={`fixed inset-0 bg-dark-300 z-50 flex flex-col ${isFullscreen ? 'p-0' : 'p-4'}`}>
             {/* Remote Video/Avatar */}
             <div className="flex-1 relative bg-black rounded-lg overflow-hidden">
-                {callType === 'video' && remoteStream && remoteStream.getVideoTracks().length > 0 ? (
+                {/* Always render the video element for video calls so srcObject can be assigned
+                    even when tracks arrive asynchronously after mount. Show avatar overlay
+                    until actual video is flowing. */}
+                {callType === 'video' && (
                     <video
                         ref={remoteVideoRef}
                         autoPlay
@@ -98,8 +101,11 @@ const ActiveCall = () => {
                         onLoadedMetadata={() => console.log('📺 Remote video loaded')}
                         className="w-full h-full object-cover"
                     />
-                ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center">
+                )}
+
+                {/* Show avatar overlay only when remote video is not yet available */}
+                {(!remoteStream || callType !== 'video') && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
                         <img
                             src={otherUser?.avatar}
                             alt={otherUser?.username}
@@ -110,8 +116,8 @@ const ActiveCall = () => {
                     </div>
                 )}
 
-                {/* Local Video (Picture in Picture) */}
-                {callType === 'video' && localStream && localStream.getVideoTracks().length > 0 && (
+                {/* Local Video (Picture in Picture) — always render for video calls */}
+                {callType === 'video' && (
                     <div className="absolute top-4 right-4 w-48 h-36 bg-black rounded-lg overflow-hidden shadow-2xl border-2 border-gray-700">
                         <video
                             ref={localVideoRef}

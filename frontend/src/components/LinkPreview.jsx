@@ -6,18 +6,26 @@ const LinkPreview = ({ url }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchPreview = async () => {
       try {
-        const { data } = await api.get(`/preview?url=${encodeURIComponent(url)}`);
+        const { data } = await api.get(`/preview?url=${encodeURIComponent(url)}`, {
+          signal: controller.signal
+        });
         setPreview(data);
       } catch (error) {
-        console.error('Failed to fetch link preview:', error);
+        if (error.name !== 'CanceledError' && error.name !== 'AbortError') {
+          console.error('Failed to fetch link preview:', error);
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchPreview();
+
+    return () => controller.abort(); // cancel on unmount or url change
   }, [url]);
 
   if (loading) {

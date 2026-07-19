@@ -1,6 +1,10 @@
 const User = require('../models/User');
 const { generateToken } = require('../utils/jwt');
 
+// Sanitize error messages — never expose internal details in production
+const errMsg = (error) =>
+  process.env.NODE_ENV === 'production' ? 'Internal server error' : error.message;
+
 // @desc    Register new user
 // @route   POST /api/auth/register
 // @access  Public
@@ -39,10 +43,7 @@ const register = async (req, res) => {
     }
   } catch (error) {
     console.error('Register error:', error);
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    res.status(500).json({ success: false, message: errMsg(error) });
   }
 };
 
@@ -91,10 +92,7 @@ const login = async (req, res) => {
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    res.status(500).json({ success: false, message: errMsg(error) });
   }
 };
 
@@ -111,10 +109,7 @@ const getMe = async (req, res) => {
     });
   } catch (error) {
     console.error('Get me error:', error);
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    res.status(500).json({ success: false, message: errMsg(error) });
   }
 };
 
@@ -136,10 +131,7 @@ const logout = async (req, res) => {
     });
   } catch (error) {
     console.error('Logout error:', error);
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    res.status(500).json({ success: false, message: errMsg(error) });
   }
 };
 

@@ -154,8 +154,9 @@ const initializeSocket = (io) => {
     // ==================== TYPING INDICATORS ====================
 
     socket.on('typing', (data) => {
-      const { chatId, username } = data;
-      socket.to(chatId).emit('typing', { chatId, username, userId: socket.userId });
+      const { chatId } = data;
+      // Use server-authoritative username from authenticated socket — never trust client-sent data
+      socket.to(chatId).emit('typing', { chatId, username: socket.user.username, userId: socket.userId });
     });
 
     socket.on('stop_typing', (data) => {

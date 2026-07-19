@@ -39,9 +39,12 @@ router.post('/', protect, upload.single('file'), (req, res) => {
     return res.status(400).json({ success: false, message: 'No file uploaded' });
   }
 
-  // Determine file URL depending on environment
-  // In production, this would be a full domain name. For local dev, a relative or server URL works.
-  const backendUrl = process.env.VITE_API_URL ? process.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000';
+  // Determine file URL depending on environment.
+  // BACKEND_URL should be set in production (e.g. https://your-api.onrender.com).
+  // Falls back to dynamically deriving it from the incoming request so dev works without extra config.
+  const backendUrl =
+    process.env.BACKEND_URL ||
+    `${req.protocol}://${req.get('host')}`;
   const fileUrl = `${backendUrl}/uploads/${req.file.filename}`;
 
   res.json({

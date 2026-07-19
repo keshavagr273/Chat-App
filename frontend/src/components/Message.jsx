@@ -16,7 +16,9 @@ const Message = ({ message, isOwn }) => {
   const [showDeleteMenu, setShowDeleteMenu] = useState(false);
   const socket = getSocket();
 
-  const isRead = message.readBy?.some(read => read.user !== user._id);
+  const isRead = message.readBy?.some(read => 
+    (read.user?._id || read.user)?.toString() !== user._id?.toString()
+  );
   const isDelivered = message.deliveredTo?.length > 0;
 
   const handleReaction = (emojiData) => {

@@ -2,6 +2,10 @@ const Message = require('../models/Message');
 const Chat = require('../models/Chat');
 const User = require('../models/User');
 
+// Sanitize error messages — never expose internal details in production
+const errMsg = (error) =>
+  process.env.NODE_ENV === 'production' ? 'Internal server error' : error.message;
+
 // @desc    Send message
 // @route   POST /api/messages
 const sendMessage = async (req, res) => {
@@ -50,10 +54,7 @@ const sendMessage = async (req, res) => {
     });
   } catch (error) {
     console.error('Send message error:', error);
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    res.status(500).json({ success: false, message: errMsg(error) });
   }
 };
 
@@ -62,6 +63,16 @@ const sendMessage = async (req, res) => {
 // @access  Private
 const getMessages = async (req, res) => {
   try {
+    // Authorization: verify the requesting user is a member of this chat
+    const chat = await Chat.findById(req.params.chatId);
+    if (!chat) {
+      return res.status(404).json({ success: false, message: 'Chat not found' });
+    }
+    const isMember = chat.users.some(u => u.toString() === req.user._id.toString());
+    if (!isMember) {
+      return res.status(403).json({ success: false, message: 'Access denied' });
+    }
+
     const messages = await Message.find({
       chat: req.params.chatId,
       isDeleted: false,
@@ -77,16 +88,10 @@ const getMessages = async (req, res) => {
         populate: { path: 'sender', select: 'username' }
       });
 
-    res.json({
-      success: true,
-      data: messages
-    });
+    res.json({ success: true, data: messages });
   } catch (error) {
     console.error('Get messages error:', error);
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    res.status(500).json({ success: false, message: errMsg(error) });
   }
 };
 
@@ -126,10 +131,7 @@ const editMessage = async (req, res) => {
     });
   } catch (error) {
     console.error('Edit message error:', error);
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    res.status(500).json({ success: false, message: errMsg(error) });
   }
 };
 
@@ -143,17 +145,11 @@ const deleteMessage = async (req, res) => {
     const message = await Message.findById(messageId);
 
     if (!message) {
-      return res.status(404).json({
-        success: false,
-        message: 'Message not found'
-      });
+      return res.status(404).json({ success: false, message: 'Message not found' });
     }
 
     if (message.sender.toString() !== req.user._id.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: 'Not authorized'
-      });
+      return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 
     message.isDeleted = true;
@@ -162,16 +158,10 @@ const deleteMessage = async (req, res) => {
 
     await message.save();
 
-    res.json({
-      success: true,
-      message: 'Message deleted'
-    });
+    res.json({ success: true, message: 'Message deleted' });
   } catch (error) {
     console.error('Delete message error:', error);
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    res.status(500).json({ success: false, message: errMsg(error) });
   }
 };
 
@@ -186,10 +176,7 @@ const addReaction = async (req, res) => {
     const message = await Message.findById(messageId);
 
     if (!message) {
-      return res.status(404).json({
-        success: false,
-        message: 'Message not found'
-      });
+      return res.status(404).json({ success: false, message: 'Message not found' });
     }
 
     // Check if user already reacted
@@ -205,16 +192,10 @@ const addReaction = async (req, res) => {
 
     await message.save();
 
-    res.json({
-      success: true,
-      data: message
-    });
+    res.json({ success: true, data: message });
   } catch (error) {
     console.error('Add reaction error:', error);
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    res.status(500).json({ success: false, message: errMsg(error) });
   }
 };
 

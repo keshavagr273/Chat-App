@@ -11,7 +11,10 @@ import {
   handleOffer,
   handleAnswer,
   handleIceCandidate,
-  addStreamToPeer
+  addStreamToPeer,
+  queueIceCandidate,
+  flushIceCandidateQueue,
+  clearIceCandidateQueue
 } from '../utils/webrtc';
 import toast from 'react-hot-toast';
 
@@ -56,7 +59,9 @@ export const useSocket = () => {
 
     // Messages
     socket.on('receive_message', (message) => {
-      if (selectedChat?._id === message.chat._id) {
+      // Use getState() to always read the current selectedChat — not the stale closure value
+      const currentChat = useChatStore.getState().selectedChat;
+      if (currentChat?._id === message.chat._id) {
         addMessage(message);
       } else {
         incrementUnreadCount(message.chat._id);
@@ -138,11 +143,12 @@ export const useSocket = () => {
 
     socket.on('call_accepted', async ({ answer }) => {
       try {
-        // Get current state values - don't use closure values
         const { peerConnection, callConnected } = useCallStore.getState();
 
         if (peerConnection && answer) {
           await handleAnswer(peerConnection, answer);
+          // Flush any ICE candidates that arrived before remoteDescription was set
+          await flushIceCandidateQueue(peerConnection);
           callConnected();
           toast.success('Call connected!', { id: 'call-setup' });
         } else {
@@ -159,8 +165,14 @@ export const useSocket = () => {
     socket.on('ice_candidate', async ({ candidate }) => {
       try {
         const { peerConnection } = useCallStore.getState();
-        if (peerConnection && candidate) {
+        if (!candidate) return;
+
+        if (peerConnection && peerConnection.remoteDescription) {
+          // Remote description is set — apply immediately
           await handleIceCandidate(peerConnection, candidate);
+        } else {
+          // Queue the candidate — will be flushed after setRemoteDescription
+          queueIceCandidate(candidate);
         }
       } catch (error) {
         console.error('Error handling ICE candidate:', error);
@@ -169,18 +181,21 @@ export const useSocket = () => {
 
     socket.on('call_rejected', () => {
       toast.error('Call was rejected');
+      clearIceCandidateQueue();
       const { endCall } = useCallStore.getState();
       endCall();
     });
 
     socket.on('call_ended', () => {
       toast('Call ended');
+      clearIceCandidateQueue();
       const { endCall } = useCallStore.getState();
       endCall();
     });
 
     socket.on('user_busy', () => {
       toast.error('User is busy on another call');
+      clearIceCandidateQueue();
       const { endCall } = useCallStore.getState();
       endCall();
     });

@@ -77,6 +77,27 @@ const ChatHeader = () => {
       // Set peer connection IMMEDIATELY - this is critical for call_accepted handler
       setPeerConnection(peerConnection);
 
+      // ⚠️ CRITICAL: Register ALL event handlers BEFORE adding tracks or creating offer.
+      // ontrack can fire as soon as local tracks are added / setLocalDescription is called.
+      // If registered after, the remote stream event is missed → black video.
+
+      // Handle remote stream
+      peerConnection.ontrack = (event) => {
+        if (event.streams && event.streams[0]) {
+          setRemoteStream(event.streams[0]);
+        }
+      };
+
+      // Handle ICE candidates
+      peerConnection.onicecandidate = (event) => {
+        if (event.candidate) {
+          socket.emit('ice_candidate', {
+            to: otherUser._id,
+            candidate: event.candidate
+          });
+        }
+      };
+
       // Add connection state handlers
       peerConnection.onconnectionstatechange = () => {
         if (peerConnection.connectionState === 'failed') {
@@ -105,25 +126,8 @@ const ChatHeader = () => {
         }
       };
 
-      // Add local stream to peer connection
+      // Add local stream to peer connection AFTER all handlers are registered
       addStreamToPeer(peerConnection, stream);
-
-      // Handle remote stream - THIS IS CRITICAL FOR CALLER TOO
-      peerConnection.ontrack = (event) => {
-        if (event.streams && event.streams[0]) {
-          setRemoteStream(event.streams[0]);
-        }
-      };
-
-      // Handle ICE candidates
-      peerConnection.onicecandidate = (event) => {
-        if (event.candidate) {
-          socket.emit('ice_candidate', {
-            to: otherUser._id,
-            candidate: event.candidate
-          });
-        }
-      };
 
       // Create and send offer
       const offer = await createOffer(peerConnection);
