@@ -29,10 +29,12 @@ const IncomingCall = () => {
         const { caller, offer, callType: incomingCallType } = incomingCallData;
 
         try {
+            console.log(`[WebRTC Debug] Accepting ${incomingCallType} call from user:`, caller._id);
             toast.loading('Setting up call...', { id: 'accept-call' });
 
             // Get user media first
             const stream = await getUserMedia(incomingCallType);
+            console.log('[WebRTC Debug] getUserMedia success. Stream ID:', stream.id, 'Tracks:', stream.getTracks().map(t => `${t.kind}:${t.readyState}`));
             setLocalStream(stream);
 
             // Fetch fresh TURN credentials from backend (uses Metered.ca if configured)
@@ -40,8 +42,9 @@ const IncomingCall = () => {
             try {
                 const { data } = await api.get('/turn');
                 iceServers = data.iceServers;
+                console.log('[WebRTC Debug] Fetched TURN credentials successfully. IceServers count:', iceServers?.length);
             } catch (e) {
-                console.warn('Could not fetch TURN credentials, falling back to STUN only:', e.message);
+                console.error('[WebRTC Debug] Could not fetch TURN credentials, falling back to STUN only:', e.message);
             }
 
             // Create peer connection with TURN credentials
@@ -56,8 +59,12 @@ const IncomingCall = () => {
 
             // Handle remote stream - THIS IS CRITICAL
             peerConnection.ontrack = (event) => {
+                console.log('[WebRTC Debug] 📡 peerConnection.ontrack fired! Event:', event);
                 if (event.streams && event.streams[0]) {
+                    console.log('[WebRTC Debug] 📡 remote stream received:', event.streams[0].id, 'Tracks:', event.streams[0].getTracks().map(t => `${t.kind}:${t.readyState}`));
                     setRemoteStream(event.streams[0]);
+                } else {
+                    console.warn('[WebRTC Debug] 📡 ontrack fired but no streams array found in event!');
                 }
             };
 
@@ -73,6 +80,7 @@ const IncomingCall = () => {
 
             // Add connection state handlers
             peerConnection.onconnectionstatechange = () => {
+                console.log('[WebRTC Debug] 🔌 Connection state changed to:', peerConnection.connectionState);
                 if (peerConnection.connectionState === 'failed') {
                     toast.error('Connection failed. Please try again.');
                     const { endCall } = useCallStore.getState();
@@ -81,6 +89,7 @@ const IncomingCall = () => {
             };
 
             peerConnection.oniceconnectionstatechange = () => {
+                console.log('[WebRTC Debug] ❄️ ICE Connection state changed to:', peerConnection.iceConnectionState);
                 if (peerConnection.iceConnectionState === 'failed') {
                     toast.error('Unable to establish connection. Please check your network.');
 

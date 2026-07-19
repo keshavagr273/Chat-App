@@ -26,6 +26,8 @@ const ActiveCall = () => {
     const [isFullscreen, setIsFullscreen] = useState(false);
     const socket = getSocket();
 
+    console.log('[WebRTC Debug] ActiveCall rendering. isInCall:', isInCall, 'callType:', callType, 'localStream:', !!localStream, 'remoteStream:', !!remoteStream);
+
     // Update call duration every second
     useEffect(() => {
         if (isInCall) {
@@ -39,12 +41,15 @@ const ActiveCall = () => {
 
     // Set local video stream
     useEffect(() => {
+        console.log('[WebRTC Debug] localStream useEffect triggered. localStream:', !!localStream, 'localVideoRef.current:', !!localVideoRef.current);
         if (localVideoRef.current && localStream) {
-            console.log('🎥 Setting local stream:', localStream.getTracks().map(t => `${t.kind}:${t.enabled}`));
+            console.log('[WebRTC Debug] 🎥 Setting local stream. Tracks:', localStream.getTracks().map(t => `${t.kind}:${t.enabled}:${t.readyState}`));
             localVideoRef.current.srcObject = localStream;
             
             // We MUST call play() manually when setting srcObject dynamically
-            localVideoRef.current.play().catch(err => console.error('Local video play error:', err));
+            localVideoRef.current.play()
+                .then(() => console.log('[WebRTC Debug] Local video play() successful'))
+                .catch(err => console.error('[WebRTC Debug] Local video play error:', err));
         }
         return () => {
             if (localVideoRef.current) {
@@ -55,12 +60,15 @@ const ActiveCall = () => {
 
     // Set remote video stream
     useEffect(() => {
+        console.log('[WebRTC Debug] remoteStream useEffect triggered. remoteStream:', !!remoteStream, 'remoteVideoRef.current:', !!remoteVideoRef.current);
         if (remoteVideoRef.current && remoteStream) {
-            console.log('📺 Setting remote stream:', remoteStream.getTracks().map(t => `${t.kind}:${t.enabled}`));
+            console.log('[WebRTC Debug] 📺 Setting remote stream. Tracks:', remoteStream.getTracks().map(t => `${t.kind}:${t.enabled}:${t.readyState}`));
             remoteVideoRef.current.srcObject = remoteStream;
 
             // We MUST call play() manually when setting srcObject dynamically
-            remoteVideoRef.current.play().catch(err => console.error('Remote video play error:', err));
+            remoteVideoRef.current.play()
+                .then(() => console.log('[WebRTC Debug] Remote video play() successful'))
+                .catch(err => console.error('[WebRTC Debug] Remote video play error:', err));
         }
         return () => {
             if (remoteVideoRef.current) {
@@ -100,7 +108,8 @@ const ActiveCall = () => {
                         autoPlay
                         playsInline
                         controls={false}
-                        onLoadedMetadata={() => console.log('📺 Remote video loaded')}
+                        onLoadedMetadata={(e) => console.log('[WebRTC Debug] 📺 Remote video loaded metadata. Size:', e.target.videoWidth, 'x', e.target.videoHeight)}
+                        onPlaying={() => console.log('[WebRTC Debug] 📺 Remote video actually playing now')}
                         className="w-full h-full object-cover"
                     />
                 )}
@@ -127,7 +136,8 @@ const ActiveCall = () => {
                             playsInline
                             muted
                             controls={false}
-                            onLoadedMetadata={() => console.log('🎥 Local video loaded')}
+                            onLoadedMetadata={(e) => console.log('[WebRTC Debug] 🎥 Local video loaded metadata. Size:', e.target.videoWidth, 'x', e.target.videoHeight)}
+                            onPlaying={() => console.log('[WebRTC Debug] 🎥 Local video actually playing now')}
                             className="w-full h-full object-cover transform scale-x-[-1]"
                         />
                         {isVideoOff && (
