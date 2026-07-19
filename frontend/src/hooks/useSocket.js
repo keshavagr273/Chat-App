@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useChatStore } from '../store/chatStore';
 import { useAuthStore } from '../store/authStore';
 import { useCallStore } from '../store/callStore';
-import { getSocket } from '../utils/socket';
+import { initSocket, getSocket, disconnectSocket } from '../utils/socket';
 import {
   getUserMedia,
   createPeerConnection,
@@ -37,10 +37,13 @@ export const useSocket = () => {
     removeMessageLocally
   } = useChatStore();
 
-  const { user } = useAuthStore();
+  const { user, token } = useAuthStore();
 
   useEffect(() => {
-    const socket = getSocket();
+    if (!token) return;
+
+    // Initialize socket FIRST, then immediately attach listeners in the same tick
+    const socket = initSocket(token);
 
     if (!socket) return;
 
@@ -234,6 +237,8 @@ export const useSocket = () => {
       socket.off('call_ended');
       socket.off('user_busy');
       socket.off('error');
+      
+      disconnectSocket();
     };
-  }, [selectedChat]); // Removed pc from deps to avoid race conditions
+  }, [token]);
 };

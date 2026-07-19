@@ -42,6 +42,8 @@ const initializeSocket = (io) => {
   });
 
   io.on('connection', async (socket) => {
+    console.log(`[SOCKET CONNECT] Socket ${socket.id} connected for User ${socket.user.username} (${socket.userId})`);
+    
     // Add user to online users map
     if (!onlineUsers.has(socket.userId)) {
       onlineUsers.set(socket.userId, new Set());
@@ -49,8 +51,11 @@ const initializeSocket = (io) => {
     const userSockets = onlineUsers.get(socket.userId);
     userSockets.add(socket.id);
 
+    console.log(`[ONLINE USERS MAP] User ${socket.user.username} now has ${userSockets.size} active connections:`, Array.from(userSockets));
+
     // If this is the user's first active connection, mark them online
     if (userSockets.size === 1) {
+      console.log(`[STATUS CHANGE] User ${socket.user.username} went ONLINE (first connection)`);
       // Update user status in database
       await User.findByIdAndUpdate(socket.userId, {
         isOnline: true,
@@ -66,6 +71,7 @@ const initializeSocket = (io) => {
 
     // Send list of online users to the newly connected user
     const onlineUserIds = Array.from(onlineUsers.keys());
+    console.log(`[EMIT ONLINE LIST] Sending ${onlineUserIds.length} online users to Socket ${socket.id}`);
     socket.emit('online_users', onlineUserIds);
 
     // Join user's chat rooms
@@ -508,13 +514,17 @@ const initializeSocket = (io) => {
     // ==================== DISCONNECT ====================
 
     socket.on('disconnect', async () => {
+      console.log(`[SOCKET DISCONNECT] Socket ${socket.id} disconnected for User ${socket.user.username} (${socket.userId})`);
+      
       // Remove this socket from the user's active sockets
       const userSockets = onlineUsers.get(socket.userId);
       if (userSockets) {
         userSockets.delete(socket.id);
+        console.log(`[ONLINE USERS MAP] User ${socket.user.username} now has ${userSockets.size} active connections left.`);
 
         // If no more active sockets, the user is completely offline
         if (userSockets.size === 0) {
+          console.log(`[STATUS CHANGE] User ${socket.user.username} went OFFLINE (0 connections left)`);
           onlineUsers.delete(socket.userId);
 
           // Update user status in database
@@ -530,6 +540,8 @@ const initializeSocket = (io) => {
             lastSeen: Date.now()
           });
         }
+      } else {
+        console.warn(`[WARNING] Disconnect for User ${socket.user.username}, but they were not in the onlineUsers map!`);
       }
     });
   });

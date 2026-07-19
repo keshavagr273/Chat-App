@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { useChatStore } from '../store/chatStore';
-import { initSocket, disconnectSocket } from '../utils/socket';
+
 import { useSocket } from '../hooks/useSocket';
 import Sidebar from '../components/Sidebar';
 import ChatBox from '../components/ChatBox';
@@ -19,13 +19,8 @@ const Chat = () => {
 
   useEffect(() => {
     if (token) {
-      initSocket(token);
       fetchChats();
     }
-
-    return () => {
-      disconnectSocket();
-    };
   }, [token]);
 
   return (
