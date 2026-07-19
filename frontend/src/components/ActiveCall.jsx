@@ -56,7 +56,7 @@ const ActiveCall = () => {
                 localVideoRef.current.srcObject = null;
             }
         };
-    }, [localStream]);
+    }, [localStream, isInCall]);
 
     // Set remote video stream
     useEffect(() => {
@@ -75,7 +75,7 @@ const ActiveCall = () => {
                 remoteVideoRef.current.srcObject = null;
             }
         };
-    }, [remoteStream]);
+    }, [remoteStream, isInCall]);
 
     const handleEndCall = () => {
         if (socket) {
