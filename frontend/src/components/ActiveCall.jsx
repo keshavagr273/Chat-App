@@ -42,8 +42,9 @@ const ActiveCall = () => {
         if (localVideoRef.current && localStream) {
             console.log('🎥 Setting local stream:', localStream.getTracks().map(t => `${t.kind}:${t.enabled}`));
             localVideoRef.current.srcObject = localStream;
-            // Don't call .play() manually — autoPlay + playsInline handles this
-            // and manual .play() can cause issues in some browsers
+            
+            // We MUST call play() manually when setting srcObject dynamically
+            localVideoRef.current.play().catch(err => console.error('Local video play error:', err));
         }
         return () => {
             if (localVideoRef.current) {
@@ -57,6 +58,9 @@ const ActiveCall = () => {
         if (remoteVideoRef.current && remoteStream) {
             console.log('📺 Setting remote stream:', remoteStream.getTracks().map(t => `${t.kind}:${t.enabled}`));
             remoteVideoRef.current.srcObject = remoteStream;
+
+            // We MUST call play() manually when setting srcObject dynamically
+            remoteVideoRef.current.play().catch(err => console.error('Remote video play error:', err));
         }
         return () => {
             if (remoteVideoRef.current) {
