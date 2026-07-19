@@ -5,6 +5,7 @@ import { useCallStore } from '../store/callStore';
 import { FiMoreVertical, FiPhone, FiVideo, FiTrash2, FiUserX, FiInfo } from 'react-icons/fi';
 import { getSocket } from '../utils/socket';
 import { getUserMedia, createPeerConnection, createOffer, addStreamToPeer } from '../utils/webrtc';
+import api from '../utils/api';
 import toast from 'react-hot-toast';
 import Avatar from './Avatar';
 import ChatInfoModal from './ChatInfoModal';
@@ -71,8 +72,17 @@ const ChatHeader = () => {
       const stream = await getUserMedia(callType);
       setLocalStream(stream);
 
-      // Create peer connection
-      const peerConnection = createPeerConnection();
+      // Fetch fresh TURN credentials from backend (uses Metered.ca if configured)
+      let iceServers = null;
+      try {
+        const { data } = await api.get('/turn');
+        iceServers = data.iceServers;
+      } catch (e) {
+        console.warn('Could not fetch TURN credentials, falling back to STUN only:', e.message);
+      }
+
+      // Create peer connection with TURN credentials
+      const peerConnection = createPeerConnection(iceServers);
 
       // Set peer connection IMMEDIATELY - this is critical for call_accepted handler
       setPeerConnection(peerConnection);

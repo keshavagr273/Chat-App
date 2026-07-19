@@ -40,12 +40,12 @@ const ActiveCall = () => {
     // Set local video stream
     useEffect(() => {
         if (localVideoRef.current && localStream) {
-            console.log('🎥 Setting local stream with tracks:', localStream.getTracks().map(t => `${t.kind}: ${t.enabled}`));
+            console.log('🎥 Setting local stream:', localStream.getTracks().map(t => `${t.kind}:${t.enabled}`));
             localVideoRef.current.srcObject = localStream;
-            localVideoRef.current.play().catch(err => console.error('Local video play error:', err));
+            // Don't call .play() manually — autoPlay + playsInline handles this
+            // and manual .play() can cause issues in some browsers
         }
         return () => {
-            // Cleanup on unmount
             if (localVideoRef.current) {
                 localVideoRef.current.srcObject = null;
             }
@@ -55,12 +55,10 @@ const ActiveCall = () => {
     // Set remote video stream
     useEffect(() => {
         if (remoteVideoRef.current && remoteStream) {
-            console.log('📺 Setting remote stream with tracks:', remoteStream.getTracks().map(t => `${t.kind}: ${t.enabled}`));
+            console.log('📺 Setting remote stream:', remoteStream.getTracks().map(t => `${t.kind}:${t.enabled}`));
             remoteVideoRef.current.srcObject = remoteStream;
-            remoteVideoRef.current.play().catch(err => console.error('Remote video play error:', err));
         }
         return () => {
-            // Cleanup on unmount
             if (remoteVideoRef.current) {
                 remoteVideoRef.current.srcObject = null;
             }

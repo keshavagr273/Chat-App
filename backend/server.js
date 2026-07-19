@@ -43,6 +43,7 @@ const chatRoutes = require('./routes/chats');
 const messageRoutes = require('./routes/messages');
 const uploadRoutes = require('./routes/upload');
 const previewRoutes = require('./routes/preview');
+const turnRoutes = require('./routes/turn');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
@@ -50,6 +51,7 @@ app.use('/api/chats', chatRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/preview', previewRoutes);
+app.use('/api/turn', turnRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

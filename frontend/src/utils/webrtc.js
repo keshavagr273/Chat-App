@@ -1,34 +1,12 @@
-// WebRTC configuration
-const configuration = {
-    iceServers: [
-        // Google STUN servers (for direct P2P on same/simple NATs)
-        { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' },
-        { urls: 'stun:stun2.l.google.com:19302' },
-        { urls: 'stun:stun3.l.google.com:19302' },
-        { urls: 'stun:stun4.l.google.com:19302' },
-        // freestun.net — free, reliable, actively maintained TURN servers
-        // Required when users are on different networks/WiFi (most real-world calls)
-        {
-            urls: 'turn:freestun.net:3478',
-            username: 'free',
-            credential: 'free'
-        },
-        {
-            urls: 'turns:freestun.net:5349',
-            username: 'free',
-            credential: 'free'
-        },
-        // Metered TURN — backup (the OLD openrelay is dead; use numb.viagenie.ca as extra fallback)
-        {
-            urls: 'turn:numb.viagenie.ca',
-            credential: 'muazkh',
-            username: 'webrtc@live.com'
-        }
-    ],
-    iceCandidatePoolSize: 10,
-    iceTransportPolicy: 'all' // Try all connection methods (STUN + TURN)
-};
+// Static fallback ICE config — STUN only.
+// Actual TURN credentials are fetched fresh from the backend before each call.
+const DEFAULT_STUN_SERVERS = [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' },
+    { urls: 'stun:stun2.l.google.com:19302' },
+    { urls: 'stun:stun3.l.google.com:19302' },
+    { urls: 'stun:stun4.l.google.com:19302' },
+];
 
 // Get user media (camera/microphone)
 export const getUserMedia = async (callType) => {
@@ -70,8 +48,15 @@ export const getUserMedia = async (callType) => {
 };
 
 // Create peer connection
-export const createPeerConnection = () => {
-    return new RTCPeerConnection(configuration);
+// Pass iceServers fetched from /api/turn for production-grade TURN support.
+// Falls back to STUN-only if not provided (works for same-network calls).
+export const createPeerConnection = (iceServers = null) => {
+    const config = {
+        iceServers: iceServers || DEFAULT_STUN_SERVERS,
+        iceCandidatePoolSize: 10,
+        iceTransportPolicy: 'all'
+    };
+    return new RTCPeerConnection(config);
 };
 
 // ==================== ICE Candidate Queue ====================
