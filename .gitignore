@@ -40,3 +40,7 @@ coverage/
 .cache/
 .temp/
 .tmp/
+
+# Documentation & Prep
+INTERVIEW_PREP.md
+PROJECT_BREAKDOWN.md

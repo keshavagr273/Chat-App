@@ -23,9 +23,10 @@ const ChatHeader = () => {
   const getChatInfo = () => {
     if (selectedChat.isGroupChat) {
       return {
-        name: selectedChat.chatName,
-        avatar: selectedChat.groupAvatar || 'https://ui-avatars.com/api/?background=random&name=Group',
-        status: `${selectedChat.users.length} members`
+        name: selectedChat.chatName || 'Group Chat',
+        avatar: selectedChat.groupAvatar || 'https://ui-avatars.com/api/?background=171b26&color=4edea3&name=Group',
+        status: `${selectedChat.users.length} members`,
+        isOnline: false
       };
     } else {
       const otherUser = selectedChat.users.find(u => u._id !== user._id);
@@ -87,10 +88,6 @@ const ChatHeader = () => {
       // Set peer connection IMMEDIATELY - this is critical for call_accepted handler
       setPeerConnection(peerConnection);
 
-      // ⚠️ CRITICAL: Register ALL event handlers BEFORE adding tracks or creating offer.
-      // ontrack can fire as soon as local tracks are added / setLocalDescription is called.
-      // If registered after, the remote stream event is missed → black video.
-
       // Handle remote stream
       peerConnection.ontrack = (event) => {
         if (event.streams && event.streams[0]) {
@@ -121,28 +118,26 @@ const ChatHeader = () => {
         if (peerConnection.iceConnectionState === 'failed') {
           toast.error('Unable to establish connection. Please check your network.');
 
-          // Try to restart ICE
           peerConnection.restartIce();
 
-          // Don't end call immediately, give it a chance to recover
           setTimeout(() => {
             if (peerConnection.iceConnectionState === 'failed' || peerConnection.iceConnectionState === 'disconnected') {
               const { endCall } = useCallStore.getState();
               endCall();
             }
-          }, 5000); // Wait 5 seconds before ending
+          }, 5000);
         } else if (peerConnection.iceConnectionState === 'disconnected') {
           toast.error('Connection lost, attempting to reconnect...');
         }
       };
 
-      // Add local stream to peer connection AFTER all handlers are registered
+      // Add local stream to peer connection
       addStreamToPeer(peerConnection, stream);
 
       // Create and send offer
       const offer = await createOffer(peerConnection);
 
-      // Start call (sets isCalling to true but NOT isInCall yet)
+      // Start call
       startCall(callType, otherUser);
 
       // Send call request to other user
@@ -158,7 +153,6 @@ const ChatHeader = () => {
       console.error('Error initiating call:', error);
       toast.error(error.message || 'Failed to start call', { id: 'call-setup' });
 
-      // Clean up on error
       setLocalStream(null);
       setPeerConnection(null);
     }
@@ -212,79 +206,107 @@ const ChatHeader = () => {
   };
 
   return (
-    <div className="h-16 bg-black/50 backdrop-blur-md border-b border-border px-6 flex items-center justify-between sticky top-0 z-10">
-      {/* User Info */}
-      <div className="flex items-center gap-3">
-        <div className="relative">
-          <Avatar
-            src={avatar}
-            name={name}
-            className="w-10 h-10"
-          />
-          {isOnline && (
-            <div className="absolute bottom-0 right-0 w-3 h-3 bg-primary rounded-full border-2 border-black"></div>
-          )}
-        </div>
+    <header className="h-16 bg-surface-container/80 backdrop-blur-xl border-b border-border-glass px-6 flex items-center justify-between sticky top-0 z-20 shadow-sm">
+      {/* Contact / Group Info */}
+      <div 
+        onClick={handleChatInfo}
+        className="flex items-center gap-3 cursor-pointer group p-1 -ml-1 rounded-xl hover:bg-surface-container-highest/50 transition-colors"
+      >
+        <Avatar
+          src={avatar}
+          name={name}
+          className="w-10 h-10 border border-primary/30"
+          showStatus={!selectedChat.isGroupChat}
+          isOnline={isOnline}
+        />
         <div>
-          <h3 className="text-white font-semibold">{name}</h3>
-          <p className={`text-xs ${isOnline ? 'text-primary' : 'text-gray-400'}`}>
+          <h3 className="font-display font-semibold text-on-surface text-sm group-hover:text-primary transition-colors flex items-center gap-1.5">
+            {name}
+            {selectedChat.isGroupChat && (
+              <span className="material-symbols-outlined text-xs text-text-muted">groups</span>
+            )}
+          </h3>
+          <p className={`text-[11px] font-label font-medium flex items-center gap-1 ${
+            isOnline ? 'text-primary' : 'text-text-muted'
+          }`}>
+            {isOnline && <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>}
             {status}
           </p>
         </div>
       </div>
 
-      {/* Actions */}
-      <div className="flex items-center gap-4">
+      {/* Action Controls */}
+      <div className="flex items-center gap-2">
+        {!selectedChat.isGroupChat && (
+          <>
+            <button
+              onClick={handleVoiceCall}
+              className="p-2 text-text-muted hover:text-primary hover:bg-surface-container-highest rounded-xl transition-all active:scale-95"
+              title="Voice Call"
+            >
+              <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 0" }}>
+                call
+              </span>
+            </button>
+            <button
+              onClick={handleVideoCall}
+              className="p-2 text-text-muted hover:text-primary hover:bg-surface-container-highest rounded-xl transition-all active:scale-95"
+              title="Video Call"
+            >
+              <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 0" }}>
+                videocam
+              </span>
+            </button>
+          </>
+        )}
+
         <button
-          onClick={handleVoiceCall}
-          className="text-gray-400 hover:text-white transition"
-          title="Voice Call"
+          onClick={handleChatInfo}
+          className="p-2 text-text-muted hover:text-primary hover:bg-surface-container-highest rounded-xl transition-all active:scale-95"
+          title="Conversation Details"
         >
-          <FiPhone className="text-xl" />
+          <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 0" }}>
+            info
+          </span>
         </button>
-        <button
-          onClick={handleVideoCall}
-          className="text-gray-400 hover:text-white transition"
-          title="Video Call"
-        >
-          <FiVideo className="text-xl" />
-        </button>
+
+        {/* Options Dropdown */}
         <div className="relative">
           <button
             onClick={() => setShowMenu(!showMenu)}
-            className="text-gray-400 hover:text-white transition"
+            className="p-2 text-text-muted hover:text-primary hover:bg-surface-container-highest rounded-xl transition-all active:scale-95"
             title="More Options"
           >
-            <FiMoreVertical className="text-xl" />
+            <span className="material-symbols-outlined text-xl">more_vert</span>
           </button>
 
-          {/* Dropdown Menu */}
           {showMenu && (
             <>
               <div
                 className="fixed inset-0 z-10"
                 onClick={() => setShowMenu(false)}
               ></div>
-              <div className="absolute right-0 mt-2 w-48 bg-dark-100 border border-border rounded-lg shadow-lg z-20 py-1">
+              <div className="absolute right-0 mt-2 w-48 bento-card p-1.5 z-20 border border-border-glass shadow-2xl animate-fade-in-up">
                 <button
                   onClick={handleChatInfo}
-                  className="w-full px-4 py-2 text-left text-gray-300 hover:bg-dark-200 flex items-center gap-3 transition"
+                  className="w-full px-3 py-2 text-left text-xs font-display font-medium text-on-surface hover:bg-surface-container-highest rounded-lg flex items-center gap-2.5 transition"
                 >
-                  <FiInfo className="text-lg" />
+                  <span className="material-symbols-outlined text-base text-primary">info</span>
                   <span>Chat Info</span>
                 </button>
                 <button
                   onClick={handleClearMessages}
-                  className="w-full px-4 py-2 text-left text-gray-300 hover:bg-dark-200 flex items-center gap-3 transition"
+                  className="w-full px-3 py-2 text-left text-xs font-display font-medium text-on-surface hover:bg-surface-container-highest rounded-lg flex items-center gap-2.5 transition"
                 >
-                  <FiUserX className="text-lg" />
-                  <span>Clear Messages</span>
+                  <span className="material-symbols-outlined text-base text-yellow-400">cleaning_services</span>
+                  <span>Clear History</span>
                 </button>
+                <div className="h-[1px] bg-border-glass my-1"></div>
                 <button
                   onClick={handleDeleteChat}
-                  className="w-full px-4 py-2 text-left text-red-400 hover:bg-dark-200 flex items-center gap-3 transition"
+                  className="w-full px-3 py-2 text-left text-xs font-display font-medium text-red-400 hover:bg-red-500/10 rounded-lg flex items-center gap-2.5 transition"
                 >
-                  <FiTrash2 className="text-lg" />
+                  <span className="material-symbols-outlined text-base text-red-400">delete</span>
                   <span>Delete Chat</span>
                 </button>
               </div>
@@ -300,7 +322,7 @@ const ChatHeader = () => {
         currentUser={user}
         onlineUsers={onlineUsers}
       />
-    </div>
+    </header>
   );
 };
 

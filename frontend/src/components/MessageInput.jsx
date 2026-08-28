@@ -18,10 +18,6 @@ const MessageInput = () => {
   const isTypingRef = useRef(false);
   const fileInputRef = useRef(null);
   const imageInputRef = useRef(null);
-  const emojiPickerRef = useRef(null);
-  const attachMenuRef = useRef(null);
-
-  const [isRecording, setIsRecording] = useState(false);
 
   useEffect(() => {
     setShowEmojiPicker(false);
@@ -121,7 +117,6 @@ const MessageInput = () => {
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Check file size (max 10MB)
       if (file.size > 10 * 1024 * 1024) {
         toast.error('File size must be less than 10MB');
         return;
@@ -136,41 +131,52 @@ const MessageInput = () => {
   };
 
   return (
-    <div className="mx-4 md:mx-6 mb-4 md:mb-6 p-2 md:p-3 bg-[#1a1b1e]/80 backdrop-blur-2xl border border-white/5 rounded-3xl shadow-[0_-5px_25px_rgba(0,0,0,0.3)] z-10 flex flex-col gap-2 transition-all">
-      {/* Reply Preview */}
+    <div className="mx-4 md:mx-6 mb-4 md:mb-5 p-2 bg-surface-container/90 backdrop-blur-xl border border-border-glass rounded-2xl shadow-glass z-20 flex flex-col gap-1.5 transition-all">
+      {/* Reply Quote Preview */}
       {replyingTo && (
-        <div className="px-4 py-2 bg-black/40 border-l-4 border-primary rounded-lg flex justify-between items-start">
-          <div className="flex flex-col overflow-hidden">
-            <span className="text-primary text-xs font-bold">Reply to {replyingTo.sender?.username}</span>
-            <span className="text-gray-300 text-sm truncate">{replyingTo.content || replyingTo.messageType}</span>
+        <div className="px-3.5 py-2 bg-surface-container-highest/80 border-l-2 border-primary rounded-xl flex justify-between items-center animate-fade-in-up">
+          <div className="flex flex-col min-w-0 pr-2">
+            <span className="text-primary text-[11px] font-display font-semibold">
+              Replying to {replyingTo.sender?.username}
+            </span>
+            <span className="text-text-muted text-xs truncate">
+              {replyingTo.content || replyingTo.messageType}
+            </span>
           </div>
-          <button onClick={() => setReplyingTo(null)} className="text-gray-400 hover:text-white transition">
-            <FiX />
+          <button 
+            onClick={() => setReplyingTo(null)} 
+            className="text-text-muted hover:text-on-surface p-1 rounded-lg hover:bg-surface-container transition-colors"
+          >
+            <FiX className="text-sm" />
           </button>
         </div>
       )}
-      {/* Selected File Preview */}
+
+      {/* Selected File Attachment Preview */}
       {selectedFile && (
-        <div className="mb-3 p-3 bg-[#111] rounded-lg flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <FiFile className="text-primary text-xl" />
-            <div>
-              <p className="text-white text-sm">{selectedFile.name}</p>
-              <p className="text-gray-400 text-xs">
-                {(selectedFile.size / 1024).toFixed(2)} KB
+        <div className="p-2.5 bg-surface-container-highest/80 border border-border-glass rounded-xl flex items-center justify-between animate-fade-in-up">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-lg bg-primary/15 border border-primary/30 flex items-center justify-center text-primary shrink-0">
+              <FiFile className="text-base" />
+            </div>
+            <div className="min-w-0">
+              <p className="font-display text-xs font-semibold text-on-surface truncate">{selectedFile.name}</p>
+              <p className="text-[10px] text-text-muted font-label">
+                {(selectedFile.size / 1024).toFixed(1)} KB
               </p>
             </div>
           </div>
           <button
             onClick={removeSelectedFile}
-            className="text-gray-400 hover:text-red-400 transition"
+            className="text-text-muted hover:text-red-400 p-1.5 rounded-lg hover:bg-surface-container transition"
           >
-            <FiX className="text-xl" />
+            <FiX className="text-base" />
           </button>
         </div>
       )}
 
-      <form onSubmit={handleSend} className="flex items-center gap-3">
+      {/* Main Input Form */}
+      <form onSubmit={handleSend} className="flex items-center gap-2">
         {/* Hidden File Inputs */}
         <input
           ref={imageInputRef}
@@ -185,77 +191,83 @@ const MessageInput = () => {
           onChange={handleFileChange}
           className="hidden"
         />
-        {/* Emoji Picker */}
+
+        {/* Attachment Button */}
         <div className="relative">
           <button
             type="button"
-            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-            className="text-gray-400 hover:text-white transition"
+            onClick={() => { setShowAttachMenu(!showAttachMenu); setShowEmojiPicker(false); }}
+            className="p-2 text-text-muted hover:text-primary hover:bg-surface-container-highest rounded-xl transition-all"
+            title="Attach Media"
           >
-            <FiSmile className="text-2xl" />
+            <span className="material-symbols-outlined text-xl">attach_file</span>
+          </button>
+
+          {/* Attachment Menu Popup */}
+          {showAttachMenu && (
+            <>
+              <div
+                className="fixed inset-0 z-20"
+                onClick={() => setShowAttachMenu(false)}
+              ></div>
+              <div className="absolute bottom-12 left-0 w-36 bento-card p-1.5 shadow-2xl z-30 animate-fade-in-up">
+                <button
+                  type="button"
+                  onClick={() => handleFileSelect('image')}
+                  className="w-full px-3 py-2 text-left text-xs font-display font-medium text-on-surface hover:bg-surface-container-highest rounded-lg flex items-center gap-2.5 transition"
+                >
+                  <FiImage className="text-sm text-primary" />
+                  <span>Image</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleFileSelect('file')}
+                  className="w-full px-3 py-2 text-left text-xs font-display font-medium text-on-surface hover:bg-surface-container-highest rounded-lg flex items-center gap-2.5 transition"
+                >
+                  <FiFile className="text-sm text-secondary-light" />
+                  <span>Document</span>
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Emoji Button */}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => { setShowEmojiPicker(!showEmojiPicker); setShowAttachMenu(false); }}
+            className="p-2 text-text-muted hover:text-yellow-400 hover:bg-surface-container-highest rounded-xl transition-all"
+            title="Add Emoji"
+          >
+            <span className="material-symbols-outlined text-xl">mood</span>
           </button>
           {showEmojiPicker && (
             <>
               <div
-                className="fixed inset-0 z-10"
+                className="fixed inset-0 z-20"
                 onClick={() => setShowEmojiPicker(false)}
               ></div>
-              <div className="absolute bottom-12 left-0 z-50">
+              <div className="absolute bottom-12 left-0 z-30 shadow-2xl rounded-2xl overflow-hidden border border-border-glass">
                 <EmojiPicker
                   onEmojiClick={handleEmojiClick}
                   theme="dark"
+                  width={300}
+                  height={380}
                 />
               </div>
             </>
           )}
         </div>
 
-        {/* Attachment */}
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => setShowAttachMenu(!showAttachMenu)}
-            className="text-gray-400 hover:text-white transition"
-            title="Attach File"
-          >
-            <FiPaperclip className="text-2xl" />
-          </button>
-
-          {/* Attachment Menu */}
-          {showAttachMenu && (
-            <>
-              <div
-                className="fixed inset-0 z-10"
-                onClick={() => setShowAttachMenu(false)}
-              ></div>
-              <div className="absolute bottom-12 left-0 w-40 bg-[#111] border border-border rounded-lg shadow-lg z-20 py-1">
-                <button
-                  onClick={() => handleFileSelect('image')}
-                  className="w-full px-4 py-2 text-left text-gray-300 hover:bg-dark-200 flex items-center gap-3 transition"
-                >
-                  <FiImage className="text-lg text-primary" />
-                  <span>Image</span>
-                </button>
-                <button
-                  onClick={() => handleFileSelect('file')}
-                  className="w-full px-4 py-2 text-left text-gray-300 hover:bg-dark-200 flex items-center gap-3 transition"
-                >
-                  <FiFile className="text-lg text-primary" />
-                  <span>File</span>
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Message Input */}
-        <div className="flex-1 flex items-center bg-[#25262b] rounded-full border border-white/5 focus-within:border-primary/50 focus-within:bg-[#2c2d33] transition-all px-2 shadow-inner">
+        {/* Text Input */}
+        <div className="flex-1 flex items-center bg-surface-container-highest/60 rounded-xl border border-border-glass focus-within:border-primary/60 focus-within:bg-surface-container-highest focus-within:shadow-[0_0_12px_rgba(16,185,129,0.15)] transition-all px-3 py-1">
           <input
             type="text"
             value={message}
             onChange={(e) => handleTyping(e.target.value)}
-            placeholder="Type a message..."
-            className="flex-1 bg-transparent text-white px-4 py-3 md:py-3.5 focus:outline-none placeholder-gray-500 text-[15px]"
+            placeholder="Type your message..."
+            className="flex-1 bg-transparent text-on-surface placeholder-text-muted/60 focus:outline-none text-xs sm:text-sm font-sans py-2"
           />
         </div>
 
@@ -263,12 +275,15 @@ const MessageInput = () => {
         <button
           type="submit"
           disabled={(!message.trim() && !selectedFile) || isUploading}
-          className="bg-primary hover:bg-secondary text-black p-3 rounded-full hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-primary/20"
+          className="primary-gradient-btn text-on-primary w-10 h-10 rounded-xl flex items-center justify-center transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-md shadow-emerald-glow shrink-0 active:scale-95"
+          title="Send message"
         >
           {isUploading ? (
-            <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-4 h-4 border-2 border-on-primary border-t-transparent rounded-full animate-spin"></div>
           ) : (
-            <FiSend className="text-xl" />
+            <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>
+              send
+            </span>
           )}
         </button>
       </form>

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useChatStore } from '../store/chatStore';
 import { useAuthStore } from '../store/authStore';
 import { getSocket } from '../utils/socket';
@@ -7,7 +7,7 @@ import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 
 const ChatBox = () => {
-  const { selectedChat, fetchMessages, messages } = useChatStore();
+  const { selectedChat, fetchMessages } = useChatStore();
   const { user } = useAuthStore();
   const socket = getSocket();
 
@@ -36,7 +36,10 @@ const ChatBox = () => {
   if (!selectedChat) return null;
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-background relative overflow-hidden">
+      {/* Subtle Aurora Ambient Glow */}
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] emerald-glow-bg rounded-full blur-3xl pointer-events-none opacity-20"></div>
+
       <ChatHeader />
       <MessageList />
       <MessageInput />

@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { useAuthStore } from './store/authStore';
+import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Chat from './pages/Chat';
@@ -12,6 +13,7 @@ function App() {
     <Router>
       <div className="min-h-screen bg-dark-300">
         <Routes>
+          <Route path="/" element={<Landing />} />
           <Route
             path="/login"
             element={!user ? <Login /> : <Navigate to="/chat" />}
@@ -24,10 +26,7 @@ function App() {
             path="/chat"
             element={user ? <Chat /> : <Navigate to="/login" />}
           />
-          <Route
-            path="/"
-            element={<Navigate to={user ? "/chat" : "/login"} />}
-          />
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
         <Toaster
           position="top-center"

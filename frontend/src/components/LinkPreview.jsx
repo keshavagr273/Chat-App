@@ -25,12 +25,12 @@ const LinkPreview = ({ url }) => {
 
     fetchPreview();
 
-    return () => controller.abort(); // cancel on unmount or url change
+    return () => controller.abort();
   }, [url]);
 
   if (loading) {
     return (
-      <div className="mt-2 w-full max-w-[300px] h-20 bg-black/20 rounded-xl animate-pulse"></div>
+      <div className="mt-2 w-full max-w-[320px] h-20 bg-surface-container-highest/50 border border-border-glass rounded-xl animate-pulse"></div>
     );
   }
 
@@ -43,19 +43,24 @@ const LinkPreview = ({ url }) => {
       href={url} 
       target="_blank" 
       rel="noreferrer"
-      className="mt-2 block w-full max-w-[320px] bg-black/20 hover:bg-black/30 border border-black/10 rounded-xl overflow-hidden transition-colors"
+      className="mt-2 block w-full max-w-[320px] bg-surface-container-highest/60 hover:bg-surface-container-highest border border-border-glass rounded-xl overflow-hidden transition-all duration-200 group"
     >
       {preview.image && (
-        <img 
-          src={preview.image} 
-          alt={preview.title} 
-          className="w-full h-32 object-cover"
-        />
+        <div className="w-full h-32 overflow-hidden bg-surface-container-lowest relative">
+          <img 
+            src={preview.image} 
+            alt={preview.title} 
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            onError={(e) => { e.target.style.display = 'none'; }}
+          />
+        </div>
       )}
       <div className="p-3">
-        <h4 className="font-semibold text-sm truncate">{preview.title || url}</h4>
+        <h4 className="font-display font-semibold text-xs text-on-surface truncate group-hover:text-primary transition-colors">
+          {preview.title || url}
+        </h4>
         {preview.description && (
-          <p className="text-xs opacity-70 mt-1 line-clamp-2 leading-snug">
+          <p className="text-[11px] text-text-muted mt-1 line-clamp-2 leading-relaxed">
             {preview.description}
           </p>
         )}
