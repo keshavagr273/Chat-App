@@ -24,7 +24,7 @@ function App() {
           />
           <Route
             path="/chat"
-            element={user ? <Chat /> : <Navigate to="/login" />}
+            element={user ? <Chat /> : <Navigate to="/" />}
           />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { useChatStore } from '../store/chatStore';
 import { FiSearch, FiLogOut, FiPlus } from 'react-icons/fi';
@@ -7,11 +8,17 @@ import NewChatModal from './NewChatModal';
 import Avatar from './Avatar';
 
 const Sidebar = () => {
+  const navigate = useNavigate();
   const { user, logout } = useAuthStore();
   const { chats, selectedChat, setSelectedChat, unreadCounts } = useChatStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [showNewChat, setShowNewChat] = useState(false);
   const [activeTab, setActiveTab] = useState('all'); // 'all', 'direct', 'groups'
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/');
+  };
 
   const filteredChats = chats.filter(chat => {
     // Tab filter
@@ -51,7 +58,7 @@ const Sidebar = () => {
         </div>
 
         <button
-          onClick={logout}
+          onClick={handleLogout}
           className="text-text-muted hover:text-red-400 p-2 rounded-lg hover:bg-surface-container-highest transition-colors"
           title="Sign Out"
         >
